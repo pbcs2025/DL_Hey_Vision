@@ -1,0 +1,37 @@
+# Datasets
+data/raw/
+data/processed/
+data/generated/
+
+# Model files
+models/**/*.pt
+models/**/*.pth
+models/**/*.h5
+models/**/*.keras
+models/**/*.onnx
+
+# Experiment outputs
+experiments/
+evaluation/results/
+
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Secrets / environment variables
+.env
+.env.*
+
+# Logs
+*.loggit 
