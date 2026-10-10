@@ -348,7 +348,91 @@
       }
     } else if (msg.type === 'assistant_response') {
       displayAssistantResponse(msg);
+    } else if (msg.type === 'dqn_decision') {
+      renderDqnDecision(msg.decision);
     }
+  }
+
+  let totalAlertsCount = 0;
+  const dqnTraceContainer = document.getElementById('dqnTraceContainer');
+  const alertsCountBadge = document.getElementById('alertsCountBadge');
+
+  function renderDqnDecision(d) {
+    if (!d || !dqnTraceContainer) return;
+
+    // Remove empty msg if present
+    const emptyMsg = dqnTraceContainer.querySelector('.dqn-empty-msg');
+    if (emptyMsg) emptyMsg.remove();
+
+    if (d.spoke_alert) {
+      totalAlertsCount++;
+      if (alertsCountBadge) alertsCountBadge.textContent = `${totalAlertsCount} Alerts`;
+    }
+
+    const entry = document.createElement('div');
+    const actClass = (d.effective_action || 'WAIT').toLowerCase();
+    entry.className = `dqn-entry entry-${actClass}`;
+
+    const qStr = (d.q_values || []).map(v => v.toFixed(2)).join(', ');
+    let extraNote = '';
+    if (d.in_cooldown) extraNote = ` [Cooldown: ${d.cooldown_remaining_sec}s]`;
+    else if (d.suppressed) extraNote = ' [Suppressed by Query]';
+
+    entry.innerHTML = `
+      <div class="dqn-row-top">
+        <span class="dqn-obj-label">${d.object.toUpperCase()} (${d.position})</span>
+        <span class="action-badge action-${actClass}">${d.effective_action}</span>
+      </div>
+      <div class="dqn-row-details">
+        <span>Risk: ${d.risk} (${d.risk_confidence})</span>
+        <span>Q: [${qStr}]${extraNote}</span>
+      </div>
+    `;
+
+    dqnTraceContainer.prepend(entry);
+    // Keep max 30 visible entries in UI log
+    while (dqnTraceContainer.children.length > 30) {
+      dqnTraceContainer.removeChild(dqnTraceContainer.lastChild);
+    }
+  }
+
+  // --- Video Source Toggle Buttons ---
+  const sourceWebcamBtn = document.getElementById('sourceWebcamBtn');
+  const sourceVideoBtn = document.getElementById('sourceVideoBtn');
+  const sourceLabel = document.getElementById('sourceLabel');
+  const telemCam = document.getElementById('telemCam');
+
+  async function switchVideoSource(type) {
+    try {
+      const res = await fetch('/api/video_source', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source: type })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        if (type === 'video') {
+          sourceVideoBtn.classList.add('active');
+          sourceWebcamBtn.classList.remove('active');
+          if (sourceLabel) sourceLabel.textContent = 'DEMO VIDEO LIVE';
+          if (telemCam) telemCam.textContent = 'Looped Video File (test_video.mp4)';
+        } else {
+          sourceWebcamBtn.classList.add('active');
+          sourceVideoBtn.classList.remove('active');
+          if (sourceLabel) sourceLabel.textContent = 'WEBCAM LIVE';
+          if (telemCam) telemCam.textContent = 'Webcam DirectShow (Idx 0)';
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to switch video source:', err);
+    }
+  }
+
+  if (sourceWebcamBtn) {
+    sourceWebcamBtn.addEventListener('click', () => switchVideoSource('webcam'));
+  }
+  if (sourceVideoBtn) {
+    sourceVideoBtn.addEventListener('click', () => switchVideoSource('video'));
   }
 
   function updateSpatialZones(detections) {

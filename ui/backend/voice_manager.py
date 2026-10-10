@@ -34,17 +34,13 @@ CHUNK_SIZE = 1024  # ~64ms chunks at 16kHz
 WAKE_WINDOW_SECONDS = 6.0  # Two-stage wake listening window
 ECHO_TAIL_SECONDS = 0.4    # Post-TTS mic mute buffer
 
-# Variations and mishearings of "Hey Vision"
+# Approved variations and mishearings of "Hey Vision"
 WAKE_PATTERNS = [
     r"\bhey\s+vision\b",
     r"\bhi\s+vision\b",
-    r"\ba\s+vision\b",
-    r"\bhigh\s+vision\b",
-    r"\bhey\s+visual\b",
     r"\bhey\s+vison\b",
     r"\bhey\s+division\b",
-    r"\bvision\s+assistant\b",
-    r"\bhey\s+listen\b"
+    r"\bhey\s+visual\b"
 ]
 
 
@@ -65,11 +61,6 @@ def match_wake_phrase(text: str) -> Tuple[bool, str]:
             # Extract everything after the wake phrase
             after_match = clean_text[match.end():].strip()
             return True, after_match
-
-    # Standalone single-word wake word
-    words = clean_text.split()
-    if words and words[0] in ["vision", "visual"]:
-        return True, " ".join(words[1:]).strip()
 
     return False, ""
 

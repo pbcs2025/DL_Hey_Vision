@@ -26,10 +26,7 @@ def test_wake_phrase_fuzzy_matching():
         ("Hi vision, what is in front of me?", "what is in front of me"),
         ("Hey Visual, describe the room.", "describe the room"),
         ("Hey vison, can I walk forward?", "can i walk forward"),
-        ("A vision, what do you see?", "what do you see"),
-        ("High vision, tell me what is ahead.", "tell me what is ahead"),
-        ("Vision assistant, find the table.", "find the table"),
-        ("Hey listen, what is that object?", "what is that object"),
+        ("Hey division, find the table.", "find the table"),
     ]
 
     for raw, expected_trailing in compound_queries:
@@ -42,9 +39,8 @@ def test_wake_phrase_fuzzy_matching():
         "hey vision.",
         "Hi Vision",
         "Hey visual",
-        "A vision",
-        "Vision",
         "Hey vison",
+        "Hey division",
         "Hey Vision!"
     ]
 
@@ -57,6 +53,9 @@ def test_wake_phrase_fuzzy_matching():
 def test_speech_without_wake_is_rejected():
     """Verifies that everyday conversational speech without wake words is ignored."""
     non_wake_phrases = [
+        "hey listen, what is that object?",
+        "a vision, what do you see?",
+        "vision assistant, find the table.",
         "Can you pass the salt please?",
         "The weather forecast says it will rain today.",
         "I need to buy some milk and eggs tomorrow.",

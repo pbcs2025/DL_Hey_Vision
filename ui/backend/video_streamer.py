@@ -4,6 +4,7 @@ Streams video at camera rate while running YOLO detection asynchronously on the 
 Handles missing/busy cameras gracefully and shuts down cleanly.
 """
 
+import os
 import time
 import threading
 from typing import Optional, List, Dict, Any, Tuple
@@ -17,13 +18,16 @@ from src.vision.detection_visualizer import get_class_color
 
 class CameraStreamer:
     """
-    Manages continuous video frame capture from a webcam or video source.
+    Manages continuous video frame capture from a webcam or video source file.
     Decoupled from model inference so the camera feed never stalls.
+    Supports switching between physical webcam and looped video file for demos.
     """
 
     def __init__(self, preferred_index: int = 0):
         self.preferred_index = preferred_index
         self.active_index = -1
+        self.source_type = "webcam"
+        self.source_path = ""
         self.cap: Optional[cv2.VideoCapture] = None
         self.is_available = False
         self.status_message = "Initializing camera..."
@@ -37,6 +41,43 @@ class CameraStreamer:
 
         self._initialize_camera()
 
+    def set_source(self, source_type: str, file_path: str = "") -> Tuple[bool, str]:
+        """Dynamically switches between 'webcam' and 'video' file source."""
+        with self.lock:
+            if self.cap is not None:
+                try:
+                    self.cap.release()
+                except Exception:
+                    pass
+                self.cap = None
+
+            self.source_type = source_type
+            self.source_path = file_path
+
+            if source_type == "video":
+                if not file_path or not os.path.exists(file_path):
+                    self.is_available = False
+                    self.status_message = f"Video file not found: {file_path}"
+                    return False, self.status_message
+
+                cap = cv2.VideoCapture(file_path)
+                if cap.isOpened():
+                    ret, test_frame = cap.read()
+                    if ret and test_frame is not None:
+                        self.cap = cap
+                        self.is_available = True
+                        self.latest_raw_frame = test_frame
+                        self.status_message = f"Looped Video active: {os.path.basename(file_path)}"
+                        print(f"[CameraStreamer] {self.status_message}")
+                        return True, self.status_message
+
+                self.is_available = False
+                self.status_message = f"Failed to open video file: {file_path}"
+                return False, self.status_message
+            else:
+                self._initialize_camera()
+                return self.is_available, self.status_message
+
     def _initialize_camera(self):
         """Attempts to open preferred camera index, then falls back to index 1."""
         indices_to_try = [self.preferred_index]
@@ -47,7 +88,6 @@ class CameraStreamer:
 
         for idx in indices_to_try:
             try:
-                # Try directshow backend first on Windows for faster initialization, then default
                 cap = cv2.VideoCapture(idx, cv2.CAP_DSHOW)
                 if not cap.isOpened():
                     cap = cv2.VideoCapture(idx)
@@ -82,10 +122,16 @@ class CameraStreamer:
         self._thread.start()
 
     def _capture_loop(self):
-        """Continuous frame grab loop at hardware frame rate."""
+        """Continuous frame grab loop at hardware frame rate (with video looping)."""
         while self.running:
             if self.is_available and self.cap is not None:
                 ret, frame = self.cap.read()
+                if not ret or frame is None:
+                    if self.source_type == "video" and self.cap is not None:
+                        # Loop video file seamlessly
+                        self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                        ret, frame = self.cap.read()
+
                 if ret and frame is not None:
                     with self.lock:
                         self.latest_raw_frame = frame

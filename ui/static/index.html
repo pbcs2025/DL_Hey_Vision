@@ -61,7 +61,11 @@
         </div>
         <div class="live-indicator">
           <span class="live-dot pulse"></span>
-          <span class="live-label">LIVE STREAM</span>
+          <span class="live-label" id="sourceLabel">WEBCAM LIVE</span>
+        </div>
+        <div class="source-toggle-group">
+          <button id="sourceWebcamBtn" class="source-btn active" title="Switch to live webcam">🎥 WEBCAM</button>
+          <button id="sourceVideoBtn" class="source-btn" title="Switch to demo test video file">🎬 DEMO VIDEO</button>
         </div>
       </div>
 
@@ -190,6 +194,17 @@
           </div>
         </div>
 
+        <!-- Proactive Hazard Monitor: DQN Decision Trace & Log -->
+        <div class="glass-card dqn-log-card">
+          <div class="card-header">
+            <h2 class="card-title">DQN DECISION TRACE & HAZARD LOG</h2>
+            <span id="alertsCountBadge" class="meta-tag">0 Alerts</span>
+          </div>
+          <div class="dqn-trace-container" id="dqnTraceContainer">
+            <div class="dqn-empty-msg">Evaluating Risk ANN + DQN @ 2 Hz...</div>
+          </div>
+        </div>
+
         <!-- Hardware & Subsystem Telemetry -->
         <div class="glass-card telemetry-card">
           <div class="card-header">
@@ -198,7 +213,7 @@
           </div>
           <div class="telemetry-grid">
             <div class="telem-row">
-              <span class="telem-key">Camera:</span>
+              <span class="telem-key">Camera Source:</span>
               <span id="telemCam" class="telem-val">Webcam DirectShow (Idx 0)</span>
             </div>
             <div class="telem-row">
@@ -214,8 +229,8 @@
               <span id="telemYolo" class="telem-val">YOLO11n (416x416 / 13 Classes)</span>
             </div>
             <div class="telem-row">
-              <span class="telem-key">Echo Suppression:</span>
-              <span id="telemEcho" class="telem-val">Active (+400ms Mute Tail)</span>
+              <span class="telem-key">Hazard Loop:</span>
+              <span id="telemHazard" class="telem-val">Risk ANN + DQN (2 Hz / 7s Cooldown)</span>
             </div>
           </div>
         </div>

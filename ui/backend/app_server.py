@@ -29,6 +29,7 @@ if PROJECT_ROOT not in sys.path:
 
 from ui.backend.video_streamer import CameraStreamer, AsyncDetectionWorker
 from ui.backend.voice_manager import VoiceManager
+from ui.backend.hazard_monitor import ProactiveHazardMonitor
 from src.voice.tts_worker import get_tts_worker
 from src.pipeline.assistant_pipeline import get_yolo_classes, process_query
 
@@ -43,6 +44,7 @@ except Exception:
 camera_streamer: Optional[CameraStreamer] = None
 detection_worker: Optional[AsyncDetectionWorker] = None
 voice_manager: Optional[VoiceManager] = None
+hazard_monitor: Optional[ProactiveHazardMonitor] = None
 
 # Active WebSocket connections
 active_websockets: List[WebSocket] = []
@@ -140,7 +142,7 @@ def on_voice_query(query: str):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Clean startup and shutdown management."""
-    global camera_streamer, detection_worker, voice_manager
+    global camera_streamer, detection_worker, voice_manager, hazard_monitor
     print("\n[AI Vision Server] Starting up...")
 
     # Initialize and start camera streamer
@@ -161,12 +163,32 @@ async def lifespan(app: FastAPI):
 
     # Initialize TTS worker
     get_tts_worker()
+
+    # Initialize Proactive Hazard Monitor (Risk ANN + DQN @ 2 Hz)
+    def get_latest_det():
+        if detection_worker:
+            _, dets, det_fps, _ = detection_worker.get_latest_data()
+            return dets, det_fps
+        return [], 0.0
+
+    def get_status():
+        return assistant_state.get("status", "STANDBY")
+
+    hazard_monitor = ProactiveHazardMonitor(
+        get_latest_detections_fn=get_latest_det,
+        get_assistant_status_fn=get_status,
+        broadcast_fn=sync_broadcast
+    )
+    hazard_monitor.start()
+
     print("[AI Vision Server] Core subsystems initialized.")
 
     yield
 
     # Clean shutdown
     print("\n[AI Vision Server] Shutting down...")
+    if hazard_monitor:
+        hazard_monitor.stop()
     if voice_manager:
         voice_manager.stop()
     if detection_worker:
@@ -394,6 +416,37 @@ async def api_query(payload: Dict[str, Any]) -> JSONResponse:
         "time_to_answer_ms": assistant_state.get("time_to_answer_ms", 0.0),
         "result": assistant_state.get("last_result", {})
     })
+
+
+@app.post("/api/video_source")
+def api_video_source(payload: Dict[str, Any]) -> JSONResponse:
+    """Switches Walk Mode video source between 'webcam' and looped 'video' file."""
+    global camera_streamer
+    source = payload.get("source", "webcam")
+    default_video_path = os.path.join(PROJECT_ROOT, "data", "test", "test_video.mp4")
+    path = payload.get("path", default_video_path)
+
+    if camera_streamer:
+        success, msg = camera_streamer.set_source(source, path)
+        return JSONResponse({
+            "status": "success" if success else "error",
+            "message": msg,
+            "source_type": camera_streamer.source_type,
+            "source_path": camera_streamer.source_path
+        })
+    return JSONResponse({"error": "Camera streamer not initialized"}, status_code=503)
+
+
+@app.get("/api/alerts/log")
+def api_alerts_log() -> JSONResponse:
+    """Retrieves ring-buffer log of all Risk ANN + DQN hazard decisions (including SILENT/WAIT)."""
+    global hazard_monitor
+    if hazard_monitor:
+        return JSONResponse({
+            "log": hazard_monitor.get_decision_log(),
+            "total_alerts": hazard_monitor.total_alerts_count
+        })
+    return JSONResponse({"log": [], "total_alerts": 0})
 
 
 # -------------------------------------------------------------
