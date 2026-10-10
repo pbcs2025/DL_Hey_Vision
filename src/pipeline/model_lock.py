@@ -1,20 +1,20 @@
 """
-Central inference synchronization lock for Deep Learning models.
-Prevents concurrent multithreaded evaluation across YOLO, Whisper,
-Keras Intent NLP, Approaching LSTM, Risk ANN, and Assistive DQN.
+Central inference synchronization locks for Deep Learning models.
+Provides granular locks per model family so that heavy speech transcription (Whisper)
+does not stall real-time video object detection (YOLO) or decision reasoning (Keras).
 """
 
 import threading
 
-# Global recursive lock for thread-safe model inference
+# Dedicated lock for YOLO11n object detection
+YOLO_LOCK = threading.RLock()
+
+# Dedicated lock for OpenAI Whisper speech-to-text
+WHISPER_LOCK = threading.RLock()
+
+# Dedicated lock for TensorFlow / Keras models (Intent NLP, Approaching LSTM, Risk ANN, Assistive DQN)
+KERAS_LOCK = threading.RLock()
+
+# Unified fallback lock for full pipeline synchronization if needed
 MODEL_LOCK = threading.RLock()
 
-
-def acquire_model_lock():
-    """Acquires the shared model inference lock."""
-    MODEL_LOCK.acquire()
-
-
-def release_model_lock():
-    """Releases the shared model inference lock."""
-    MODEL_LOCK.release()

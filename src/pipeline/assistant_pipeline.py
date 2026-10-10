@@ -5,7 +5,7 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 from ultralytics import YOLO
 
-from src.pipeline.model_lock import MODEL_LOCK
+from src.pipeline.model_lock import YOLO_LOCK, KERAS_LOCK, WHISPER_LOCK, MODEL_LOCK
 from src.risk.risk_features import create_risk_features
 from src.dqn.dqn_bridge import get_dqn_action
 
@@ -106,7 +106,7 @@ RISK_LABELS = [
 
 def predict_intent(query):
 
-    with MODEL_LOCK:
+    with KERAS_LOCK:
         prediction = nlp_model.predict(
             tf.constant(
                 [query],
@@ -159,7 +159,7 @@ def predict_risk(
         ahead=ahead
     )
 
-    with MODEL_LOCK:
+    with KERAS_LOCK:
         prediction = risk_model.predict(
             tf.constant(
                 [features],
@@ -205,7 +205,7 @@ def make_dqn_decision(
         else 0
     )
 
-    with MODEL_LOCK:
+    with KERAS_LOCK:
         decision = get_dqn_action(
             risk=risk_score,
             confidence=detection["confidence"],
@@ -224,7 +224,7 @@ def make_dqn_decision(
 
 def detect_objects(input_source, conf=0.25):
 
-    with MODEL_LOCK:
+    with YOLO_LOCK:
         results = yolo_model.predict(
             input_source,
             conf=conf,
