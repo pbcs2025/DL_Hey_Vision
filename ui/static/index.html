@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Vision Assistant — Assistive Spatial HUD</title>
+  <meta name="description" content="Real-time hands-free assistive vision assistant with continuous object detection, spatial guidance, and fuzzy voice control.">
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body class="obsidian-theme">
+
+  <!-- Unfocused Warning Banner -->
+  <div id="unfocusedWarning" class="unfocused-banner hidden" role="alert">
+    <div class="banner-content">
+      <span class="warning-icon">⚠️</span>
+      <span class="warning-text"><strong>TAB NOT FOCUSED:</strong> Spacebar shortcut is inactive while window is out of focus. Click anywhere inside the tab to resume.</span>
+    </div>
+  </div>
+
+  <!-- Audio Unlock Overlay ("Start Assistant") -->
+  <div id="startOverlay" class="start-overlay" role="dialog" aria-modal="true" aria-labelledby="startTitle">
+    <div class="overlay-glass-card">
+      <div class="cyber-brackets"></div>
+      <div class="pulse-ring"></div>
+      <div class="start-orb">
+        <svg viewBox="0 0 24 24" class="start-icon" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="22"/>
+        </svg>
+      </div>
+      <h1 id="startTitle" class="glow-title">AI VISION ASSISTANT</h1>
+      <p class="start-tagline">Autonomous Spatial Perception & Voice Guidance</p>
+      <div class="start-prompt">
+        <button id="startBtn" class="cyber-btn primary-pulse">
+          <span class="btn-text">START ASSISTANT</span>
+          <span class="btn-subtext">Click or Press any key to unlock Web Audio & activate HUD</span>
+        </button>
+      </div>
+      <div class="overlay-badges">
+        <span class="badge">Hands-Free "Hey Vision"</span>
+        <span class="badge">Spacebar Fallback</span>
+        <span class="badge">Continuous Live Detection</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main HUD Application Shell -->
+  <div class="app-shell">
+    
+    <!-- Header Bar -->
+    <header class="hud-header">
+      <div class="header-left">
+        <div class="hud-logo-brackets">
+          <span class="logo-bracket">[</span>
+          <span class="logo-text">VISION HUD</span>
+          <span class="logo-bracket">]</span>
+        </div>
+        <div class="live-indicator">
+          <span class="live-dot pulse"></span>
+          <span class="live-label">LIVE STREAM</span>
+        </div>
+      </div>
+
+      <!-- Real-Time FPS & Latency Metrics Bar -->
+      <div class="header-metrics">
+        <div class="metric-item">
+          <span class="metric-label">CAM FPS:</span>
+          <span id="camFpsVal" class="metric-val text-cyan">--</span>
+        </div>
+        <div class="metric-separator">|</div>
+        <div class="metric-item">
+          <span class="metric-label">DET FPS:</span>
+          <span id="detFpsVal" class="metric-val text-cyan">--</span>
+        </div>
+        <div class="metric-separator">|</div>
+        <div class="metric-item">
+          <span class="metric-label">DET LATENCY:</span>
+          <span id="detLatVal" class="metric-val text-cyan">-- ms</span>
+        </div>
+      </div>
+
+      <!-- Assistant Status Orb -->
+      <div class="header-right">
+        <div class="status-orb-container">
+          <div id="statusOrb" class="status-orb status-standby"></div>
+          <div class="status-info">
+            <span class="status-title">STATUS</span>
+            <span id="statusLabel" class="status-state">STANDBY</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace: Video Feed & Spatial HUD -->
+    <main class="hud-main">
+
+      <!-- Left Column: Primary Video Canvas & Spatial Overlay -->
+      <section class="viewport-section" aria-label="Live Video Viewport">
+        <div class="viewport-container">
+          <!-- Cyber HUD Brackets -->
+          <div class="hud-corner top-left"></div>
+          <div class="hud-corner top-right"></div>
+          <div class="hud-corner bottom-left"></div>
+          <div class="hud-corner bottom-right"></div>
+
+          <!-- Video Stream -->
+          <div class="video-wrapper">
+            <img id="videoFeed" src="/video_feed" alt="Live Camera Feed with Real-Time Object Detection" class="mjpeg-stream">
+          </div>
+
+          <!-- Spatial Zone Pills (Left, Center, Right) -->
+          <div class="spatial-zones-bar">
+            <div id="zoneLeft" class="zone-pill">
+              <span class="zone-name">LEFT ZONE</span>
+              <span id="zoneLeftCount" class="zone-badge">0</span>
+            </div>
+            <div id="zoneCenter" class="zone-pill">
+              <span class="zone-name">CENTER PATH</span>
+              <span id="zoneCenterCount" class="zone-badge">0</span>
+            </div>
+            <div id="zoneRight" class="zone-pill">
+              <span class="zone-name">RIGHT ZONE</span>
+              <span id="zoneRightCount" class="zone-badge">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live 'Heard: ...' Line -->
+        <div class="heard-line-container" aria-live="polite">
+          <div class="heard-label-badge">HEARD</div>
+          <div id="heardText" class="heard-text">Listening for "Hey Vision" or Spacebar...</div>
+        </div>
+      </section>
+
+      <!-- Right Column: Assistive Guidance & Controls Panel -->
+      <aside class="guidance-panel" aria-label="Assistive Dialogue & Telemetry">
+
+        <!-- Response Card -->
+        <div class="glass-card response-card">
+          <div class="card-header">
+            <h2 class="card-title">ASSISTANT RESPONSE</h2>
+            <button id="replayBtn" class="icon-btn" title="Replay voice response" aria-label="Replay spoken response">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+              </svg>
+            </button>
+          </div>
+          <div class="response-body">
+            <p id="assistantResponseText" class="response-text">Ready. Ask a question hands-free or press Spacebar.</p>
+            <div class="response-meta">
+              <span id="responseLatency" class="meta-tag">Latency: -- ms</span>
+              <span id="responseIntent" class="meta-tag">Intent: READY</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Question Chips -->
+        <div class="glass-card chips-card">
+          <h2 class="card-title">QUICK PROMPTS</h2>
+          <div class="chips-grid">
+            <button class="prompt-chip" data-query="What is in front of me?">What is in front of me?</button>
+            <button class="prompt-chip" data-query="Where is the door?">Where is the door?</button>
+            <button class="prompt-chip" data-query="Is it safe to walk forward?">Is it safe to walk?</button>
+            <button class="prompt-chip" data-query="Describe the room.">Describe the room</button>
+            <button class="prompt-chip" data-query="Find the chair.">Find the chair</button>
+            <button class="prompt-chip" data-query="Read any text in view.">Read text in view</button>
+          </div>
+        </div>
+
+        <!-- Direct Query Input (Always Works Even if Mic Unavailable) -->
+        <div class="glass-card query-input-card">
+          <h2 class="card-title">DIRECT QUERY</h2>
+          <form id="queryForm" class="query-form">
+            <input type="text" id="queryInput" placeholder="Type a question (e.g. 'where is the door')..." autocomplete="off">
+            <button type="submit" id="sendQueryBtn" class="send-btn" aria-label="Send Query">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </form>
+          <div class="spacebar-instruction">
+            <kbd>SPACEBAR</kbd> <span>press anywhere to talk without wake phrase</span>
+          </div>
+        </div>
+
+        <!-- Hardware & Subsystem Telemetry -->
+        <div class="glass-card telemetry-card">
+          <div class="card-header">
+            <h2 class="card-title">SYSTEM TELEMETRY</h2>
+            <span id="healthBadge" class="health-badge ready">READY</span>
+          </div>
+          <div class="telemetry-grid">
+            <div class="telem-row">
+              <span class="telem-key">Camera:</span>
+              <span id="telemCam" class="telem-val">Webcam DirectShow (Idx 0)</span>
+            </div>
+            <div class="telem-row">
+              <span class="telem-key">Microphone:</span>
+              <span id="telemMic" class="telem-val">Calibrated (16kHz VAD)</span>
+            </div>
+            <div class="telem-row">
+              <span class="telem-key">Whisper Model:</span>
+              <span id="telemWhisper" class="telem-val">base.en (Decoupled Lock)</span>
+            </div>
+            <div class="telem-row">
+              <span class="telem-key">YOLO Model:</span>
+              <span id="telemYolo" class="telem-val">YOLO11n (416x416 / 13 Classes)</span>
+            </div>
+            <div class="telem-row">
+              <span class="telem-key">Echo Suppression:</span>
+              <span id="telemEcho" class="telem-val">Active (+400ms Mute Tail)</span>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

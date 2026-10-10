@@ -170,9 +170,10 @@ class AsyncDetectionWorker:
     with proximity estimated from box size (never claiming 'approaching').
     """
 
-    def __init__(self, camera_streamer: CameraStreamer, conf_threshold: float = 0.25):
+    def __init__(self, camera_streamer: CameraStreamer, conf_threshold: float = 0.25, imgsz: int = 416):
         self.camera_streamer = camera_streamer
         self.conf_threshold = conf_threshold
+        self.imgsz = imgsz
         self.running = False
         self.lock = threading.Lock()
 
@@ -208,6 +209,7 @@ class AsyncDetectionWorker:
                     results = yolo_model.predict(
                         frame,
                         conf=self.conf_threshold,
+                        imgsz=self.imgsz,
                         verbose=False
                     )
 
