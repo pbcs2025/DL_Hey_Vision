@@ -2,11 +2,11 @@ import threading
 from src.voice.tts_worker import get_tts_worker
 
 
-def speak(text, priority=10, sync=True):
+def speak(text, priority=5, sync=True):
     """
     Convert text to speech using the persistent Windows TTS worker.
     :param text: Utterance text.
-    :param priority: Priority level (1=warn, 10=normal).
+    :param priority: Priority level (1=emergency warning, 5=user query response, 10=proactive speak).
     :param sync: Whether to block until speech finishes (default True for backward compatibility).
     """
     if not text:

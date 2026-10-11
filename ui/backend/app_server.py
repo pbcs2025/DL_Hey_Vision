@@ -17,7 +17,7 @@ from typing import Dict, Any, List, Optional
 
 import cv2
 import numpy as np
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, Form, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -30,6 +30,7 @@ if PROJECT_ROOT not in sys.path:
 from ui.backend.video_streamer import CameraStreamer, AsyncDetectionWorker
 from ui.backend.voice_manager import VoiceManager
 from ui.backend.hazard_monitor import ProactiveHazardMonitor
+from ui.backend.test_lab_manager import get_test_lab_manager
 from src.voice.tts_worker import get_tts_worker
 from src.pipeline.assistant_pipeline import get_yolo_classes, process_query
 
@@ -53,6 +54,7 @@ websocket_lock = asyncio.Lock()
 # Assistant state
 assistant_state = {
     "status": "STANDBY",
+    "active_mode": "walk",  # "walk" | "test_lab"
     "last_heard": "",
     "last_query": "",
     "last_response": "",
@@ -99,27 +101,37 @@ def on_voice_state(state: str, data: Dict[str, Any]):
 
 
 def on_voice_query(query: str):
-    """Callback when a speech query is recognized (wake phrase or Spacebar)."""
+    """Callback when a speech query is recognized (wake phrase, Spacebar, or direct query)."""
     t_end_speech = time.perf_counter()
     assistant_state["last_query"] = query
     sync_broadcast({"type": "voice_query", "query": query, "timestamp": time.time()})
 
-    # Execute assistant pipeline on latest frame
-    frame = None
-    if camera_streamer:
-        frame = camera_streamer.get_raw_frame()
-
-    # Save temporary query frame
-    frame_path = os.path.join(PROJECT_ROOT, "data", "test", "live_query_frame.jpg")
-    os.makedirs(os.path.dirname(frame_path), exist_ok=True)
-    if frame is not None:
-        cv2.imwrite(frame_path, frame)
+    test_lab = get_test_lab_manager()
+    if assistant_state.get("active_mode") == "test_lab":
+        # Execute query against active Test Lab media
+        result = test_lab.execute_query(query)
+        time_to_answer_ms = result.get("total_elapsed_ms", 0.0)
     else:
-        frame_path = os.path.join(PROJECT_ROOT, "data", "test", "door_test.png")
+        # Execute assistant pipeline on latest live camera frame
+        frame = None
+        if camera_streamer:
+            frame = camera_streamer.get_raw_frame()
 
-    result = process_query(query, frame_path)
-    t_answer_ready = time.perf_counter()
-    time_to_answer_ms = round((t_answer_ready - t_end_speech) * 1000.0, 1)
+        # Save temporary query frame
+        frame_path = os.path.join(PROJECT_ROOT, "data", "test", "live_query_frame.jpg")
+        os.makedirs(os.path.dirname(frame_path), exist_ok=True)
+        if frame is not None:
+            cv2.imwrite(frame_path, frame)
+        else:
+            frame_path = os.path.join(PROJECT_ROOT, "data", "test", "door_test.png")
+
+        result = process_query(query, frame_path)
+        t_answer_ready = time.perf_counter()
+        time_to_answer_ms = round((t_answer_ready - t_end_speech) * 1000.0, 1)
+
+        # Speak response via TTS worker (priority 5 = high precedence over proactive speech)
+        tts = get_tts_worker()
+        tts.speak(result.get("response", ""), priority=5)
 
     assistant_state["last_result"] = result
     assistant_state["last_response"] = result.get("response", "")
@@ -133,10 +145,6 @@ def on_voice_query(query: str):
         "time_to_answer_ms": time_to_answer_ms,
         "timestamp": time.time()
     })
-
-    # Speak response via TTS worker
-    tts = get_tts_worker()
-    tts.speak(result.get("response", ""), priority=10)
 
 
 @asynccontextmanager
@@ -167,9 +175,9 @@ async def lifespan(app: FastAPI):
     # Initialize Proactive Hazard Monitor (Risk ANN + DQN @ 2 Hz)
     def get_latest_det():
         if detection_worker:
-            _, dets, det_fps, _ = detection_worker.get_latest_data()
-            return dets, det_fps
-        return [], 0.0
+            _, dets, det_fps, _, frame_id, det_ts = detection_worker.get_latest_data()
+            return dets, det_fps, frame_id, det_ts
+        return [], 0.0, 0, 0.0
 
     def get_status():
         return assistant_state.get("status", "STANDBY")
@@ -195,6 +203,7 @@ async def lifespan(app: FastAPI):
         detection_worker.stop()
     if camera_streamer:
         camera_streamer.release()
+    get_test_lab_manager().cleanup_temp_uploads()
     print("[AI Vision Server] Shutdown complete.")
 
 
@@ -244,7 +253,7 @@ def generate_mjpeg_stream():
         # Fetch annotated frame if available, else raw frame
         annotated_frame = None
         if detection_worker:
-            annotated_frame, _, _, _ = detection_worker.get_latest_data()
+            annotated_frame, *_ = detection_worker.get_latest_data()
 
         if annotated_frame is None and camera_streamer:
             annotated_frame = camera_streamer.get_raw_frame()
@@ -373,7 +382,7 @@ def api_telemetry() -> JSONResponse:
     detections: List[Dict[str, Any]] = []
 
     if detection_worker:
-        _, detections, det_fps, det_lat_ms = detection_worker.get_latest_data()
+        _, detections, det_fps, det_lat_ms, *_ = detection_worker.get_latest_data()
 
     return JSONResponse({
         "camera_fps": cam_fps,
@@ -450,6 +459,141 @@ def api_alerts_log() -> JSONResponse:
 
 
 # -------------------------------------------------------------
+# Phase 5: Test Lab & Evaluation Endpoints
+# -------------------------------------------------------------
+
+@app.post("/api/set_mode")
+def api_set_mode(payload: Dict[str, Any]) -> JSONResponse:
+    """Sets active HUD mode between 'walk' and 'test_lab'."""
+    mode = payload.get("mode", "walk")
+    if mode not in ["walk", "test_lab"]:
+        return JSONResponse({"error": "Invalid mode. Use 'walk' or 'test_lab'."}, status_code=400)
+    assistant_state["active_mode"] = mode
+    sync_broadcast({"type": "mode_change", "mode": mode, "timestamp": time.time()})
+    return JSONResponse({"status": "success", "mode": mode})
+
+
+@app.get("/api/test_lab/samples")
+def api_test_lab_samples() -> JSONResponse:
+    """Returns available sample assets for Test Lab."""
+    samples = get_test_lab_manager().get_available_samples()
+    return JSONResponse({"status": "success", "samples": samples})
+
+
+@app.post("/api/test_lab/select_sample")
+def api_test_lab_select_sample(payload: Dict[str, Any]) -> JSONResponse:
+    """Loads a chosen sample asset into Test Lab."""
+    global camera_streamer
+    filename = payload.get("filename", "")
+    if not filename:
+        return JSONResponse({"error": "Missing filename"}, status_code=400)
+    try:
+        media = get_test_lab_manager().select_sample(filename)
+        # If media is video and streamer exists, point streamer to it for continuous box display
+        if media.get("type") == "video" and camera_streamer:
+            camera_streamer.set_source("video", media["path"])
+        return JSONResponse({"status": "success", "media": media})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=404)
+
+
+@app.post("/api/test_lab/upload")
+async def api_test_lab_upload(file: UploadFile = File(...)) -> JSONResponse:
+    """Handles upload of image or video with validation and temp-file auto-cleanup."""
+    global camera_streamer
+    try:
+        content = await file.read()
+        media = get_test_lab_manager().handle_upload(content, file.filename)
+        # If media is video, point streamer to it
+        if media.get("type") == "video" and camera_streamer:
+            camera_streamer.set_source("video", media["path"])
+        return JSONResponse({"status": "success", "media": media})
+    except ValueError as ve:
+        return JSONResponse({"error": str(ve)}, status_code=400)
+    except Exception as e:
+        return JSONResponse({"error": f"Upload processing failed: {str(e)}"}, status_code=500)
+
+
+@app.get("/api/test_lab/current_media")
+def api_test_lab_current_media() -> JSONResponse:
+    """Returns metadata for the currently active Test Lab media."""
+    media = get_test_lab_manager().get_active_media_info()
+    return JSONResponse({"status": "success", "media": media})
+
+
+@app.get("/api/test_lab/media_file")
+def api_test_lab_media_file():
+    """Serves the raw active image or video file for browser playback."""
+    info = get_test_lab_manager().get_active_media_info()
+    file_path = info.get("path")
+    if not file_path or not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Active media file not found")
+    media_type = "video/mp4" if info.get("type") == "video" else "image/jpeg"
+    return FileResponse(file_path, media_type=media_type)
+
+
+@app.get("/api/test_lab/annotated_image")
+def api_test_lab_annotated_image():
+    """Serves the active image annotated with YOLO bounding boxes and confidences."""
+    info = get_test_lab_manager().get_active_media_info()
+    ann_path = info.get("annotated_image_path")
+    if not ann_path or not os.path.exists(ann_path):
+        ann_path = info.get("path")
+    if not ann_path or not os.path.exists(ann_path):
+        raise HTTPException(status_code=404, detail="Annotated image not available")
+    return FileResponse(ann_path, media_type="image/jpeg")
+
+
+@app.post("/api/test_lab/analyze_movement")
+def api_test_lab_analyze_movement() -> JSONResponse:
+    """Executes the real process_video() pipeline on the loaded video with progress tracking."""
+    try:
+        job = get_test_lab_manager().start_movement_analysis()
+        return JSONResponse({"status": "started", "job": job})
+    except ValueError as ve:
+        return JSONResponse({"error": str(ve)}, status_code=400)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.get("/api/test_lab/movement_progress")
+def api_test_lab_movement_progress() -> JSONResponse:
+    """Returns current progress and detected events for movement analysis."""
+    job = get_test_lab_manager().get_analysis_progress()
+    return JSONResponse({"status": "success", "job": job})
+
+
+@app.post("/api/test_lab/query")
+def api_test_lab_query(payload: Dict[str, Any]) -> JSONResponse:
+    """Executes query specifically against loaded Test Lab media."""
+    query = payload.get("query", "").strip()
+    if not query:
+        return JSONResponse({"error": "Empty query"}, status_code=400)
+    try:
+        result = get_test_lab_manager().execute_query(query)
+        return JSONResponse({
+            "status": "success",
+            "query": query,
+            "response": result.get("response", ""),
+            "result": result,
+            "stage_latencies": result.get("stage_latencies", {}),
+            "time_to_answer_ms": result.get("total_elapsed_ms", 0.0)
+        })
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.get("/api/evaluation")
+def api_evaluation() -> JSONResponse:
+    """Dynamically reads experiment_02_summary.json and CNN architecture metadata."""
+    try:
+        data = get_test_lab_manager().get_evaluation_summary()
+        return JSONResponse({"status": "success", "data": data})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+# -------------------------------------------------------------
 # WebSocket Telemetry & Event Stream
 # -------------------------------------------------------------
 
@@ -490,7 +634,7 @@ async def websocket_telemetry(websocket: WebSocket):
             detections: List[Dict[str, Any]] = []
 
             if detection_worker:
-                _, detections, det_fps, det_lat_ms = detection_worker.get_latest_data()
+                _, detections, det_fps, det_lat_ms, *_ = detection_worker.get_latest_data()
 
             payload = {
                 "type": "telemetry",

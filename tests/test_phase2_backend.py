@@ -42,7 +42,7 @@ class TestPhase2Backend(unittest.TestCase):
         # Allow worker to process a few frames
         time.sleep(1.2)
 
-        annotated, detections, det_fps, det_lat_ms = worker.get_latest_data()
+        annotated, detections, det_fps, det_lat_ms, *_ = worker.get_latest_data()
         self.assertIsNotNone(annotated, "Worker must produce an annotated frame.")
         self.assertIsInstance(detections, list)
         self.assertGreaterEqual(det_lat_ms, 0.0, "Detection latency must be non-negative.")

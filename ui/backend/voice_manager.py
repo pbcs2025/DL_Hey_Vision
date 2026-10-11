@@ -38,6 +38,7 @@ ECHO_TAIL_SECONDS = 0.4    # Post-TTS mic mute buffer
 WAKE_PATTERNS = [
     r"\bhey\s+vision\b",
     r"\bhi\s+vision\b",
+    r"\bhigh\s+vision\b",
     r"\bhey\s+vison\b",
     r"\bhey\s+division\b",
     r"\bhey\s+visual\b"
@@ -264,7 +265,8 @@ class VoiceManager:
                 audio_float,
                 language="en",
                 fp16=False,
-                temperature=0.0
+                temperature=0.0,
+                initial_prompt="Hey Vision."
             )
         transcribe_ms = (time.perf_counter() - t_trans_start) * 1000.0
 

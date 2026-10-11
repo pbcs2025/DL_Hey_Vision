@@ -10,8 +10,15 @@ import threading
 from typing import Optional, List, Dict, Any, Tuple
 import cv2
 import numpy as np
+import torch
 
-from src.pipeline.model_lock import YOLO_LOCK
+from src.pipeline.model_lock import YOLO_LOCK, NUM_THREADS
+
+try:
+    torch.set_num_threads(NUM_THREADS)
+except Exception:
+    pass
+
 from src.pipeline.assistant_pipeline import yolo_model, get_yolo_classes
 from src.vision.detection_visualizer import get_class_color
 
@@ -136,6 +143,8 @@ class CameraStreamer:
                     with self.lock:
                         self.latest_raw_frame = frame
                     self._update_fps()
+                    if self.source_type == "video":
+                        time.sleep(0.033)  # Pace looped video to ~30 FPS to avoid CPU saturation
                 else:
                     # Brief pause if frame read failed
                     time.sleep(0.02)
@@ -227,6 +236,8 @@ class AsyncDetectionWorker:
         self.latest_detections: List[Dict[str, Any]] = []
         self.detection_fps = 0.0
         self.detection_latency_ms = 0.0
+        self.frame_id = 0
+        self.detection_timestamp = 0.0
         self._det_count = 0
         self._last_fps_calc = time.perf_counter()
         self._thread: Optional[threading.Thread] = None
@@ -263,6 +274,8 @@ class AsyncDetectionWorker:
                 dt_ms = (time.perf_counter() - t_start) * 1000.0
 
                 with self.lock:
+                    self.frame_id += 1
+                    self.detection_timestamp = time.time()
                     self.latest_annotated_frame = annotated
                     self.latest_detections = detections
                     self.detection_latency_ms = round(dt_ms, 1)
@@ -386,14 +399,16 @@ class AsyncDetectionWorker:
 
         return detections, annotated
 
-    def get_latest_data(self) -> Tuple[Optional[np.ndarray], List[Dict[str, Any]], float, float]:
+    def get_latest_data(self) -> Tuple[Optional[np.ndarray], List[Dict[str, Any]], float, float, int, float]:
         with self.lock:
             frame_copy = self.latest_annotated_frame.copy() if self.latest_annotated_frame is not None else None
             return (
                 frame_copy,
                 list(self.latest_detections),
                 self.detection_fps,
-                self.detection_latency_ms
+                self.detection_latency_ms,
+                self.frame_id,
+                self.detection_timestamp
             )
 
     def stop(self):

@@ -1,0 +1,210 @@
+text,intent
+"What is around me?",SCENE_SUMMARY
+"Tell me what is around me",SCENE_SUMMARY
+"What can you see around me?",SCENE_SUMMARY
+"Describe what is around me",SCENE_SUMMARY
+"What is in my surroundings?",SCENE_SUMMARY
+"Can you tell me what is around?",SCENE_SUMMARY
+"What objects are around me?",SCENE_SUMMARY
+"Give me an overview of my surroundings",SCENE_SUMMARY
+"What do you see?",SCENE_SUMMARY
+"Tell me about my surroundings",SCENE_SUMMARY
+"What is nearby?",SCENE_SUMMARY
+"What objects can you see around me?",SCENE_SUMMARY
+"Can you describe my surroundings?",SCENE_SUMMARY
+"Tell me what you can see around me",SCENE_SUMMARY
+"What is present around me?",SCENE_SUMMARY
+"Give me a summary of the surroundings",SCENE_SUMMARY
+"What is all around me?",SCENE_SUMMARY
+"What is in my environment?",SCENE_SUMMARY
+"Can you tell me what is nearby?",SCENE_SUMMARY
+"Give me a general view of my surroundings",SCENE_SUMMARY
+
+"What is in front of me?",FRONT_OBJECTS
+"What do I have in front of me?",FRONT_OBJECTS
+"Tell me what is ahead",FRONT_OBJECTS
+"What is directly ahead?",FRONT_OBJECTS
+"What can you see in front of me?",FRONT_OBJECTS
+"Are there any objects in front of me?",FRONT_OBJECTS
+"What is ahead of me?",FRONT_OBJECTS
+"Tell me what is directly in front",FRONT_OBJECTS
+"What objects are ahead?",FRONT_OBJECTS
+"Can you see anything in front of me?",FRONT_OBJECTS
+"What is right ahead of me?",FRONT_OBJECTS
+"Describe what is in front of me",FRONT_OBJECTS
+"What do you see ahead?",FRONT_OBJECTS
+"Is anything directly ahead?",FRONT_OBJECTS
+"Tell me about the area in front of me",FRONT_OBJECTS
+"What objects are directly ahead?",FRONT_OBJECTS
+"Can you tell me what is ahead?",FRONT_OBJECTS
+"What's in my path?",FRONT_OBJECTS
+"What is located in front of me?",FRONT_OBJECTS
+"Look ahead and tell me what you see",FRONT_OBJECTS
+
+"Where is the door?",LOCATE_OBJECT
+"Can you find the door?",LOCATE_OBJECT
+"Where can I find the door?",LOCATE_OBJECT
+"Tell me where the door is",LOCATE_OBJECT
+"Is there a door nearby?",LOCATE_OBJECT
+"Locate the door for me",LOCATE_OBJECT
+"Which direction is the door?",LOCATE_OBJECT
+"Where is the entrance door?",LOCATE_OBJECT
+"Can you tell me the position of the door?",LOCATE_OBJECT
+"Do you see a door?",LOCATE_OBJECT
+"Where is that door?",LOCATE_OBJECT
+"Find the door",LOCATE_OBJECT
+"Tell me the direction of the door",LOCATE_OBJECT
+"Can you locate a door?",LOCATE_OBJECT
+"Where can I see the door?",LOCATE_OBJECT
+"Is the door on my left or right?",LOCATE_OBJECT
+"Where exactly is the door?",LOCATE_OBJECT
+"Show me where the door is",LOCATE_OBJECT
+"Can you identify the location of the door?",LOCATE_OBJECT
+"Tell me the door's position",LOCATE_OBJECT
+
+"Read this sign",READ_TEXT
+"What does this sign say?",READ_TEXT
+"Can you read this?",READ_TEXT
+"Read the text for me",READ_TEXT
+"What is written here?",READ_TEXT
+"Tell me what this says",READ_TEXT
+"Can you read the writing?",READ_TEXT
+"Read this text",READ_TEXT
+"What does the sign say?",READ_TEXT
+"Please read this sign",READ_TEXT
+"Can you tell me what is written?",READ_TEXT
+"Read what is in front of me",READ_TEXT
+"What words are written here?",READ_TEXT
+"Can you read this sign for me?",READ_TEXT
+"Tell me the text in this image",READ_TEXT
+"What does this board say?",READ_TEXT
+"Read the board",READ_TEXT
+"What is written on the sign?",READ_TEXT
+"Can you recognize the text?",READ_TEXT
+"Please tell me what this says",READ_TEXT
+
+"Is anything approaching me?",DETECT_APPROACHING
+"Is someone coming toward me?",DETECT_APPROACHING
+"Is anything moving toward me?",DETECT_APPROACHING
+"Is a person approaching?",DETECT_APPROACHING
+"Is someone coming closer?",DETECT_APPROACHING
+"Can you detect anything approaching?",DETECT_APPROACHING
+"Is anyone walking toward me?",DETECT_APPROACHING
+"Is something coming toward me?",DETECT_APPROACHING
+"Tell me if someone is approaching",DETECT_APPROACHING
+"Is a person getting closer?",DETECT_APPROACHING
+"Is anything coming closer to me?",DETECT_APPROACHING
+"Can you see someone approaching?",DETECT_APPROACHING
+"Is anybody moving toward me?",DETECT_APPROACHING
+"Is someone walking towards me?",DETECT_APPROACHING
+"Can you check if anything is approaching?",DETECT_APPROACHING
+"Is there something coming toward me?",DETECT_APPROACHING
+"Tell me if anything is getting closer",DETECT_APPROACHING
+"Is anyone approaching from my side?",DETECT_APPROACHING
+"Can you detect an approaching person?",DETECT_APPROACHING
+"Is something moving closer to me?",DETECT_APPROACHING
+
+"Is there an obstacle ahead?",OBSTACLE_CHECK
+"Is anything blocking my path?",OBSTACLE_CHECK
+"Do I have an obstacle in front of me?",OBSTACLE_CHECK
+"Is my path clear?",OBSTACLE_CHECK
+"Can you check for obstacles?",OBSTACLE_CHECK
+"Is there anything blocking the way?",OBSTACLE_CHECK
+"Is something directly blocking me?",OBSTACLE_CHECK
+"Are there obstacles ahead?",OBSTACLE_CHECK
+"Can you see an obstacle in front?",OBSTACLE_CHECK
+"Is anything in my way?",OBSTACLE_CHECK
+"Check if there is an obstacle",OBSTACLE_CHECK
+"Is there something blocking my path?",OBSTACLE_CHECK
+"Can you check what is blocking my way?",OBSTACLE_CHECK
+"Is the way ahead clear?",OBSTACLE_CHECK
+"Do you detect anything blocking the path?",OBSTACLE_CHECK
+"Is there something in my path?",OBSTACLE_CHECK
+"Tell me if there is an obstacle",OBSTACLE_CHECK
+"Can you check the path ahead?",OBSTACLE_CHECK
+"Is anything obstructing my way?",OBSTACLE_CHECK
+"Check for anything blocking me",OBSTACLE_CHECK
+
+"What is this?",OBJECT_IDENTIFICATION
+"What am I looking at?",OBJECT_IDENTIFICATION
+"Can you identify this object?",OBJECT_IDENTIFICATION
+"What object is this?",OBJECT_IDENTIFICATION
+"Tell me what this is",OBJECT_IDENTIFICATION
+"Can you recognize this?",OBJECT_IDENTIFICATION
+"What am I seeing?",OBJECT_IDENTIFICATION
+"Identify this object",OBJECT_IDENTIFICATION
+"Can you tell me what this object is?",OBJECT_IDENTIFICATION
+"What is in front of the camera?",OBJECT_IDENTIFICATION
+"Please identify this",OBJECT_IDENTIFICATION
+"What am I looking at right now?",OBJECT_IDENTIFICATION
+"Can you recognize the object?",OBJECT_IDENTIFICATION
+"Tell me what object I am seeing",OBJECT_IDENTIFICATION
+"What is this thing?",OBJECT_IDENTIFICATION
+"Can you identify what I am looking at?",OBJECT_IDENTIFICATION
+"What is that object?",OBJECT_IDENTIFICATION
+"Please tell me what this is",OBJECT_IDENTIFICATION
+"Can you tell what this object is?",OBJECT_IDENTIFICATION
+"Identify what I am seeing",OBJECT_IDENTIFICATION
+
+"Give me a quick description of the scene",SCENE_DESCRIPTION
+"Describe the scene",SCENE_DESCRIPTION
+"Give me a brief description",SCENE_DESCRIPTION
+"Describe what you see",SCENE_DESCRIPTION
+"Can you describe the scene?",SCENE_DESCRIPTION
+"Give me a short description of my surroundings",SCENE_DESCRIPTION
+"Briefly describe what is around me",SCENE_DESCRIPTION
+"Give me a description of the environment",SCENE_DESCRIPTION
+"Describe my surroundings briefly",SCENE_DESCRIPTION
+"Can you give me a quick scene description?",SCENE_DESCRIPTION
+"Summarize the scene",SCENE_DESCRIPTION
+"Give me a brief scene summary",SCENE_DESCRIPTION
+"Tell me what the scene looks like",SCENE_DESCRIPTION
+"Describe my environment",SCENE_DESCRIPTION
+"Give me a short overview of the scene",SCENE_DESCRIPTION
+"Can you summarize what you see?",SCENE_DESCRIPTION
+"Give me a quick overview",SCENE_DESCRIPTION
+"Describe the surroundings in a few words",SCENE_DESCRIPTION
+"Tell me briefly what the scene contains",SCENE_DESCRIPTION
+"Give me a concise description of the scene",SCENE_DESCRIPTION
+
+"Repeat that",REPEAT_RESPONSE
+"Can you repeat?",REPEAT_RESPONSE
+"Say that again",REPEAT_RESPONSE
+"Repeat your last response",REPEAT_RESPONSE
+"Can you say that again?",REPEAT_RESPONSE
+"Please repeat",REPEAT_RESPONSE
+"Repeat what you said",REPEAT_RESPONSE
+"I didn't hear that, repeat it",REPEAT_RESPONSE
+"Say it again",REPEAT_RESPONSE
+"Could you repeat the answer?",REPEAT_RESPONSE
+"Repeat the information",REPEAT_RESPONSE
+"Can you say the last thing again?",REPEAT_RESPONSE
+"Please say that again",REPEAT_RESPONSE
+"Repeat your answer",REPEAT_RESPONSE
+"I didn't understand, repeat",REPEAT_RESPONSE
+"Could you repeat that for me?",REPEAT_RESPONSE
+"Tell me that again",REPEAT_RESPONSE
+"Repeat the previous response",REPEAT_RESPONSE
+"Say your answer again",REPEAT_RESPONSE
+"Can you repeat the last message?",REPEAT_RESPONSE
+
+"Tell me more",MORE_DETAIL
+"Give me more details",MORE_DETAIL
+"Can you explain more?",MORE_DETAIL
+"I want more information",MORE_DETAIL
+"Give me additional details",MORE_DETAIL
+"Can you provide more detail?",MORE_DETAIL
+"Tell me more about that",MORE_DETAIL
+"Explain that in more detail",MORE_DETAIL
+"Give me some more information",MORE_DETAIL
+"Can you elaborate?",MORE_DETAIL
+"Please give me more details",MORE_DETAIL
+"What else can you tell me?",MORE_DETAIL
+"Can you explain further?",MORE_DETAIL
+"Give me a little more information",MORE_DETAIL
+"Tell me something more about it",MORE_DETAIL
+"Can you provide additional information?",MORE_DETAIL
+"I need more details",MORE_DETAIL
+"Please explain further",MORE_DETAIL
+"Can you tell me more about this?",MORE_DETAIL
+"Give me further details",MORE_DETAIL

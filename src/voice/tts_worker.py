@@ -13,7 +13,7 @@ import pyttsx3
 class TTSWorker:
     """
     Dedicated background worker thread for pyttsx3.
-    Supports priority queuing (1 = urgent warning, 10 = standard response),
+    Supports priority queuing (1 = urgent warning, 5 = user query response, 10 = proactive alert),
     instant interruption for safety warnings, and mic-mute status tracking.
     """
 

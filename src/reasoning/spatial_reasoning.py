@@ -77,7 +77,10 @@ def process_yolo_detections(results):
                 "x_center": position["x_center"],
                 "y_center": position["y_center"],
                 "width": box_width,
-                "height": box_height
+                "height": box_height,
+                "image_width": image_width,
+                "image_height": image_height,
+                "bbox": [int(x1), int(y1), int(x2), int(y2)]
             })
 
     return detections

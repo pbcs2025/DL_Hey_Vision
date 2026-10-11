@@ -1,12 +1,16 @@
 /**
- * AI Vision Assistant — Interactive Cyber-Aura HUD Client Logic
+ * AI Vision Assistant — Interactive Cyber-Aura HUD Client Logic (Phase 5)
  * Features:
  * - Web Audio API initialization on explicit user gesture
  * - Synthesized futuristic earcons (wake, listening, thinking, answer ready)
  * - Spacebar hotkey with e.preventDefault() to eliminate scrolling
  * - Window focus / blur warning detector
  * - Real-time WebSocket telemetry & voice state synchronization
- * - Direct query submission & prompt chip dispatch
+ * - Navigation between Live Walk Mode, Test Lab, and Model Evaluation
+ * - Test Lab: sample picker, file drag/drop upload, media detection preview
+ * - Test Lab: "Analyse movement" background runner with live progress bar and timeline
+ * - Test Lab: query execution with measured latency pipeline trace
+ * - Model Evaluation: dynamic benchmark reader from experiment_02_summary.json
  */
 
 (function () {
@@ -103,87 +107,128 @@
 
   const statusOrb = document.getElementById('statusOrb');
   const statusLabel = document.getElementById('statusLabel');
+
   const heardText = document.getElementById('heardText');
-
-  const zoneLeftCount = document.getElementById('zoneLeftCount');
-  const zoneCenterCount = document.getElementById('zoneCenterCount');
-  const zoneRightCount = document.getElementById('zoneRightCount');
-  const zoneLeft = document.getElementById('zoneLeft');
-  const zoneCenter = document.getElementById('zoneCenter');
-  const zoneRight = document.getElementById('zoneRight');
-
-  const responseText = document.getElementById('assistantResponseText');
+  const assistantResponseText = document.getElementById('assistantResponseText');
   const responseLatency = document.getElementById('responseLatency');
   const responseIntent = document.getElementById('responseIntent');
   const replayBtn = document.getElementById('replayBtn');
+
+  const zoneLeft = document.getElementById('zoneLeft');
+  const zoneCenter = document.getElementById('zoneCenter');
+  const zoneRight = document.getElementById('zoneRight');
+  const zoneLeftCount = document.getElementById('zoneLeftCount');
+  const zoneCenterCount = document.getElementById('zoneCenterCount');
+  const zoneRightCount = document.getElementById('zoneRightCount');
 
   const queryForm = document.getElementById('queryForm');
   const queryInput = document.getElementById('queryInput');
   const promptChips = document.querySelectorAll('.prompt-chip');
 
-  // --- Startup & Overlay Unlock ---
-  function unlockAssistant() {
-    if (audioUnlocked) return;
+  // Mode Tabs & View Containers
+  const tabWalk = document.getElementById('tabWalk');
+  const tabTestLab = document.getElementById('tabTestLab');
+  const tabEval = document.getElementById('tabEval');
+  const viewWalkMode = document.getElementById('viewWalkMode');
+  const viewTestLab = document.getElementById('viewTestLab');
+  const viewEvaluation = document.getElementById('viewEvaluation');
+
+  let currentMode = 'walk'; // 'walk' | 'test-lab' | 'eval'
+
+  // --- Mode Tab Switching ---
+  async function setMode(mode) {
+    currentMode = mode;
+
+    // Update Tab Classes
+    [tabWalk, tabTestLab, tabEval].forEach((t) => {
+      if (t) {
+        const isActive = t.dataset.tab === mode;
+        t.classList.toggle('active', isActive);
+        t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      }
+    });
+
+    // Update View Containers
+    if (viewWalkMode) viewWalkMode.classList.toggle('hidden', mode !== 'walk');
+    if (viewTestLab) viewTestLab.classList.toggle('hidden', mode !== 'test-lab');
+    if (viewEvaluation) viewEvaluation.classList.toggle('hidden', mode !== 'eval');
+
+    // Notify Backend
+    const backendMode = mode === 'test-lab' ? 'test_lab' : 'walk';
+    try {
+      await fetch('/api/set_mode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: backendMode })
+      });
+    } catch (e) {
+      console.warn('Mode change sync error:', e);
+    }
+
+    if (mode === 'eval') {
+      loadEvaluationMetrics();
+    } else if (mode === 'test-lab') {
+      loadCurrentTestLabMedia();
+    }
+  }
+
+  if (tabWalk) tabWalk.addEventListener('click', () => setMode('walk'));
+  if (tabTestLab) tabTestLab.addEventListener('click', () => setMode('test-lab'));
+  if (tabEval) tabEval.addEventListener('click', () => setMode('eval'));
+
+  // --- Audio Unlock & Greeting ---
+  function unlockAudioAndStart() {
     initAudioContext();
+    if (startOverlay) {
+      startOverlay.classList.add('fading');
+      setTimeout(() => startOverlay.remove(), 400);
+    }
     playEarcon('wake');
 
     // Spoken startup greeting
     if ('speechSynthesis' in window) {
-      const greetingUtterance = new SpeechSynthesisUtterance('AI Vision Assistant initialized.');
+      const greetingUtterance = new SpeechSynthesisUtterance(
+        'AI Vision Assistant initialized. Walk mode active. Say Hey Vision or press Spacebar to ask a question.'
+      );
       greetingUtterance.rate = 1.05;
       greetingUtterance.pitch = 1.0;
       window.speechSynthesis.speak(greetingUtterance);
     }
-
-    startOverlay.classList.add('dissolve');
-    setTimeout(() => {
-      startOverlay.style.display = 'none';
-    }, 500);
-
-    // Focus window
-    window.focus();
   }
 
-  startBtn.addEventListener('click', unlockAssistant);
-  startOverlay.addEventListener('click', unlockAssistant);
+  if (startBtn) {
+    startBtn.addEventListener('click', unlockAudioAndStart);
+  }
 
-  // --- Window Focus & Blur Warning Handling ---
+  window.addEventListener('keydown', function onFirstKey(e) {
+    if (!audioUnlocked) {
+      unlockAudioAndStart();
+      window.removeEventListener('keydown', onFirstKey);
+    }
+  });
+
+  // --- Window Focus Detection ---
   window.addEventListener('blur', () => {
-    unfocusedWarning.classList.remove('hidden');
+    if (unfocusedWarning) unfocusedWarning.classList.remove('hidden');
   });
 
   window.addEventListener('focus', () => {
-    unfocusedWarning.classList.add('hidden');
+    if (unfocusedWarning) unfocusedWarning.classList.add('hidden');
   });
 
-  // --- Spacebar & Keyboard Hotkey Management ---
+  // --- Spacebar Hotkey ---
   window.addEventListener('keydown', (e) => {
-    // If overlay is still present, any key unlocks it
-    if (!audioUnlocked) {
-      unlockAssistant();
-      if (e.code === 'Space') e.preventDefault();
-      return;
-    }
-
-    // Space key fallback handling
-    if (e.code === 'Space') {
-      const activeEl = document.activeElement;
-      const isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
-
-      // Only intercept space if not currently typing in a text field
-      if (!isInput) {
-        e.preventDefault(); // Prevent scrolling the webpage!
-        triggerSpacebarListening();
-      }
+    if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+      triggerSpacebarAction();
     }
   });
 
-  function triggerSpacebarListening() {
+  function triggerSpacebarAction() {
     playEarcon('listen');
     setOrbState('LISTENING');
-    heardText.textContent = 'Spacebar active: Listening for direct speech query...';
+    heardText.textContent = 'Spacebar pressed: Listening for query...';
 
-    // Notify backend via WebSocket or API
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ action: 'spacebar' }));
     } else {
@@ -191,107 +236,113 @@
     }
   }
 
-  // --- State Orb Visualizer ---
+  // --- Status Orb State Renderer ---
   function setOrbState(state) {
-    statusOrb.className = 'status-orb';
-    const s = (state || 'STANDBY').toUpperCase();
-    statusLabel.textContent = s;
+    if (!statusOrb || !statusLabel) return;
+    const cleanState = (state || 'STANDBY').toUpperCase();
+    statusLabel.textContent = cleanState;
 
-    switch (s) {
-      case 'LISTENING':
-        statusOrb.classList.add('status-listening');
-        break;
-      case 'AWAKE':
-        statusOrb.classList.add('status-awake');
-        break;
-      case 'ANALYZING':
-        statusOrb.classList.add('status-analyzing');
-        break;
-      case 'SPEAKING':
-        statusOrb.classList.add('status-speaking');
-        break;
-      case 'STANDBY':
-      default:
-        statusOrb.classList.add('status-standby');
-        break;
+    statusOrb.className = 'status-orb';
+    if (cleanState === 'LISTENING') {
+      statusOrb.classList.add('status-listening');
+    } else if (cleanState === 'ANALYZING') {
+      statusOrb.classList.add('status-analyzing');
+    } else if (cleanState === 'SPEAKING') {
+      statusOrb.classList.add('status-speaking');
+    } else {
+      statusOrb.classList.add('status-standby');
     }
   }
 
-  // --- Query Dispatch ---
-  async function submitQuery(queryStr) {
-    const cleanQuery = (queryStr || '').trim();
-    if (!cleanQuery) return;
+  // --- Assistant Spoken & Text Responses ---
+  let lastSpokenText = '';
 
-    playEarcon('thinking');
+  function displayAssistantResponse(data) {
+    playEarcon('answer');
+    const text = data.response || 'Ready.';
+    lastSpokenText = text;
+
+    if (currentMode === 'test-lab') {
+      const tlText = document.getElementById('testLabResponseText');
+      const tlLat = document.getElementById('testLabResponseLatency');
+      const tlIntent = document.getElementById('testLabResponseIntent');
+      if (tlText) tlText.textContent = text;
+      if (tlLat) tlLat.textContent = `Latency: ${(data.time_to_answer_ms || 0).toFixed(0)} ms`;
+      if (tlIntent && data.result) tlIntent.textContent = `Intent: ${data.result.intent || 'QUERY'}`;
+    } else {
+      if (assistantResponseText) assistantResponseText.textContent = text;
+      if (responseLatency) responseLatency.textContent = `Latency: ${(data.time_to_answer_ms || 0).toFixed(0)} ms`;
+      if (responseIntent && data.result) responseIntent.textContent = `Intent: ${data.result.intent || 'QUERY'}`;
+    }
+    setOrbState('STANDBY');
+  }
+
+  function replayLastSpeech() {
+    if (!lastSpokenText) return;
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(lastSpokenText);
+      utterance.rate = 1.05;
+      window.speechSynthesis.speak(utterance);
+    }
+  }
+
+  if (replayBtn) replayBtn.addEventListener('click', replayLastSpeech);
+  const testLabReplayBtn = document.getElementById('testLabReplayBtn');
+  if (testLabReplayBtn) testLabReplayBtn.addEventListener('click', replayLastSpeech);
+
+  // --- Query Submission (Walk Mode) ---
+  if (queryForm) {
+    queryForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const query = queryInput.value.trim();
+      if (!query) return;
+      queryInput.value = '';
+      sendQuery(query);
+    });
+  }
+
+  promptChips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const q = chip.dataset.query;
+      if (q) sendQuery(q);
+    });
+  });
+
+  async function sendQuery(query) {
     setOrbState('ANALYZING');
-    heardText.textContent = `Query: "${cleanQuery}"`;
+    playEarcon('thinking');
+    heardText.textContent = `Processing query: "${query}"`;
 
     try {
       const res = await fetch('/api/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: cleanQuery })
+        body: JSON.stringify({ query: query })
       });
       const data = await res.json();
-      displayAssistantResponse(data);
+      if (data.status === 'success') {
+        displayAssistantResponse(data);
+      }
     } catch (err) {
-      console.error('Query failed:', err);
-      responseText.textContent = 'Error processing query. System ready for next question.';
+      console.warn('Query failed:', err);
       setOrbState('STANDBY');
     }
   }
 
-  function displayAssistantResponse(data) {
-    playEarcon('answer');
-    setOrbState('SPEAKING');
-
-    const reply = data.response || 'No response generated.';
-    responseText.textContent = reply;
-    responseLatency.textContent = `Latency: ${data.time_to_answer_ms || 0} ms`;
-
-    const intent = (data.result && data.result.intent) || 'ANSWER_READY';
-    responseIntent.textContent = `Intent: ${intent}`;
-
-    setTimeout(() => {
-      setOrbState('STANDBY');
-    }, 3000);
-  }
-
-  queryForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const query = queryInput.value;
-    queryInput.value = '';
-    submitQuery(query);
-  });
-
-  promptChips.forEach((chip) => {
-    chip.addEventListener('click', () => {
-      const query = chip.getAttribute('data-query');
-      submitQuery(query);
-    });
-  });
-
-  replayBtn.addEventListener('click', () => {
-    const text = responseText.textContent;
-    if (text && 'speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      window.speechSynthesis.speak(utterance);
-    }
-  });
-
-  // --- WebSocket Real-Time Telemetry & Event Stream ---
+  // --- WebSocket Connection ---
   let ws = null;
   let wsReconnectTimer = null;
 
   function connectWebSocket() {
+    if (wsReconnectTimer) clearTimeout(wsReconnectTimer);
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
 
     ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-      console.log('[WebSocket] Connected to vision server.');
-      if (wsReconnectTimer) clearTimeout(wsReconnectTimer);
+      console.log('[WebSocket] Connected to AI Vision Assistant HUD server.');
     };
 
     ws.onmessage = (event) => {
@@ -373,7 +424,7 @@
     const actClass = (d.effective_action || 'WAIT').toLowerCase();
     entry.className = `dqn-entry entry-${actClass}`;
 
-    const qStr = (d.q_values || []).map(v => v.toFixed(2)).join(', ');
+    const qStr = (d.q_values || []).map((v) => v.toFixed(2)).join(', ');
     let extraNote = '';
     if (d.in_cooldown) extraNote = ` [Cooldown: ${d.cooldown_remaining_sec}s]`;
     else if (d.suppressed) extraNote = ' [Suppressed by Query]';
@@ -390,13 +441,12 @@
     `;
 
     dqnTraceContainer.prepend(entry);
-    // Keep max 30 visible entries in UI log
     while (dqnTraceContainer.children.length > 30) {
       dqnTraceContainer.removeChild(dqnTraceContainer.lastChild);
     }
   }
 
-  // --- Video Source Toggle Buttons ---
+  // --- Video Source Toggle Buttons (Live Walk Mode) ---
   const sourceWebcamBtn = document.getElementById('sourceWebcamBtn');
   const sourceVideoBtn = document.getElementById('sourceVideoBtn');
   const sourceLabel = document.getElementById('sourceLabel');
@@ -428,12 +478,8 @@
     }
   }
 
-  if (sourceWebcamBtn) {
-    sourceWebcamBtn.addEventListener('click', () => switchVideoSource('webcam'));
-  }
-  if (sourceVideoBtn) {
-    sourceVideoBtn.addEventListener('click', () => switchVideoSource('video'));
-  }
+  if (sourceWebcamBtn) sourceWebcamBtn.addEventListener('click', () => switchVideoSource('webcam'));
+  if (sourceVideoBtn) sourceVideoBtn.addEventListener('click', () => switchVideoSource('video'));
 
   function updateSpatialZones(detections) {
     let leftCount = 0;
@@ -456,7 +502,521 @@
     zoneRight.classList.toggle('has-obstacle', rightCount > 0);
   }
 
-  // Connect WebSocket on page load
+  // ==========================================================================
+  // PHASE 5: TEST LAB LOGIC
+  // ==========================================================================
+  const activeMediaBadge = document.getElementById('activeMediaBadge');
+  const sampleButtons = document.querySelectorAll('.sample-btn');
+  const uploadDropzone = document.getElementById('uploadDropzone');
+  const mediaFileInput = document.getElementById('mediaFileInput');
+  const browseBtn = document.getElementById('browseBtn');
+
+  const testImageWrapper = document.getElementById('testImageWrapper');
+  const testVideoWrapper = document.getElementById('testVideoWrapper');
+  const testLabImage = document.getElementById('testLabImage');
+  const testLabVideo = document.getElementById('testLabVideo');
+  const viewportMediaTitle = document.getElementById('viewportMediaTitle');
+  const viewportMediaSub = document.getElementById('viewportMediaSub');
+  const streamVideoBtn = document.getElementById('streamVideoBtn');
+  const mediaDetectionsSummary = document.getElementById('mediaDetectionsSummary');
+
+  const movementAnalysisCard = document.getElementById('movementAnalysisCard');
+  const startAnalysisBtn = document.getElementById('startAnalysisBtn');
+  const analysisProgressSection = document.getElementById('analysisProgressSection');
+  const analysisProgressBar = document.getElementById('analysisProgressBar');
+  const analysisStatusText = document.getElementById('analysisStatusText');
+  const analysisPercentText = document.getElementById('analysisPercentText');
+  const analysisElapsedText = document.getElementById('analysisElapsedText');
+  const timelineContainer = document.getElementById('timelineContainer');
+  const timelineCountBadge = document.getElementById('timelineCountBadge');
+
+  const testLabQueryForm = document.getElementById('testLabQueryForm');
+  const testLabQueryInput = document.getElementById('testLabQueryInput');
+  const testLabPromptChips = document.querySelectorAll('.test-lab-prompt-chip');
+
+  // Latency trace elements
+  const pipelineTotalMs = document.getElementById('pipelineTotalMs');
+  const barNlp = document.getElementById('barNlp');
+  const latNlp = document.getElementById('latNlp');
+  const barYolo = document.getElementById('barYolo');
+  const latYolo = document.getElementById('latYolo');
+  const barSpatial = document.getElementById('barSpatial');
+  const latSpatial = document.getElementById('latSpatial');
+  const barRisk = document.getElementById('barRisk');
+  const latRisk = document.getElementById('latRisk');
+  const barDqn = document.getElementById('barDqn');
+  const latDqn = document.getElementById('latDqn');
+
+  // Sample Picker Click
+  sampleButtons.forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const filename = btn.dataset.sample;
+      if (!filename) return;
+
+      sampleButtons.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      try {
+        const res = await fetch('/api/test_lab/select_sample', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: filename })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          renderTestLabMedia(data.media);
+        }
+      } catch (err) {
+        console.warn('Sample selection error:', err);
+      }
+    });
+  });
+
+  // Browse File Button
+  if (browseBtn && mediaFileInput) {
+    browseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      mediaFileInput.click();
+    });
+  }
+
+  if (uploadDropzone && mediaFileInput) {
+    uploadDropzone.addEventListener('click', () => mediaFileInput.click());
+
+    ['dragenter', 'dragover'].forEach((eventName) => {
+      uploadDropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        uploadDropzone.classList.add('dragover');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach((eventName) => {
+      uploadDropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        uploadDropzone.classList.remove('dragover');
+      });
+    });
+
+    uploadDropzone.addEventListener('drop', (e) => {
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        handleUploadFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    mediaFileInput.addEventListener('change', (e) => {
+      if (mediaFileInput.files && mediaFileInput.files.length > 0) {
+        handleUploadFile(mediaFileInput.files[0]);
+      }
+    });
+  }
+
+  // Upload File Handler
+  async function handleUploadFile(file) {
+    if (!file) return;
+
+    // Client-side size validation (max 50MB)
+    const maxSize = 50 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert(`File exceeds 50MB limit (${(file.size / (1024 * 1024)).toFixed(1)} MB). Please select a smaller media file.`);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      activeMediaBadge.textContent = 'Uploading & Validating...';
+      const res = await fetch('/api/test_lab/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        sampleButtons.forEach((b) => b.classList.remove('active'));
+        renderTestLabMedia(data.media);
+      } else {
+        alert(data.error || 'Upload failed.');
+        loadCurrentTestLabMedia();
+      }
+    } catch (err) {
+      alert('Upload request error: ' + err);
+      loadCurrentTestLabMedia();
+    }
+  }
+
+  // Load Current Media on Tab Open
+  async function loadCurrentTestLabMedia() {
+    try {
+      const res = await fetch('/api/test_lab/current_media');
+      const data = await res.json();
+      if (data.status === 'success' && data.media) {
+        renderTestLabMedia(data.media);
+      }
+    } catch (err) {
+      console.warn('Failed to load current test lab media:', err);
+    }
+  }
+
+  // Render Test Lab Media Viewport
+  function renderTestLabMedia(media) {
+    const isVideo = media.type === 'video';
+    const filename = media.name || 'media';
+
+    if (activeMediaBadge) {
+      activeMediaBadge.textContent = `${filename} (${media.type.toUpperCase()})`;
+    }
+
+    if (viewportMediaTitle) {
+      viewportMediaTitle.textContent = `${filename.toUpperCase()} — ${media.type.toUpperCase()}`;
+    }
+
+    if (viewportMediaSub) {
+      if (isVideo) {
+        viewportMediaSub.textContent = `Video resolution: ${media.width}x${media.height} | ${media.total_frames || 0} frames @ ${media.fps || 30} FPS`;
+      } else {
+        viewportMediaSub.textContent = `Image resolution: ${media.width}x${media.height} | Detected ${(media.detections || []).length} objects`;
+      }
+    }
+
+    if (isVideo) {
+      if (testImageWrapper) testImageWrapper.classList.add('hidden');
+      if (testVideoWrapper) testVideoWrapper.classList.remove('hidden');
+      if (testLabVideo) {
+        testLabVideo.src = `/api/test_lab/media_file?t=${Date.now()}`;
+        testLabVideo.load();
+      }
+      if (movementAnalysisCard) movementAnalysisCard.classList.remove('hidden');
+      if (streamVideoBtn) streamVideoBtn.classList.remove('hidden');
+    } else {
+      if (testVideoWrapper) testVideoWrapper.classList.add('hidden');
+      if (testImageWrapper) testImageWrapper.classList.remove('hidden');
+      if (testLabImage) {
+        testLabImage.src = `/api/test_lab/annotated_image?t=${Date.now()}`;
+      }
+      if (movementAnalysisCard) movementAnalysisCard.classList.add('hidden');
+      if (streamVideoBtn) streamVideoBtn.classList.add('hidden');
+    }
+
+    // Populate Detection Summary Chips
+    if (mediaDetectionsSummary) {
+      mediaDetectionsSummary.innerHTML = '';
+      const dets = media.detections || [];
+      if (dets.length > 0) {
+        dets.forEach((d) => {
+          const chip = document.createElement('span');
+          chip.className = 'det-summary-chip';
+          chip.textContent = `${d.object.toUpperCase()} (${(d.confidence * 100).toFixed(0)}%) - ${d.position}`;
+          mediaDetectionsSummary.appendChild(chip);
+        });
+      }
+    }
+  }
+
+  // Stream Video in Live View Button
+  if (streamVideoBtn) {
+    streamVideoBtn.addEventListener('click', () => {
+      setMode('walk');
+      switchVideoSource('video');
+    });
+  }
+
+  // --- "Analyse Movement" Background Job & Timeline ---
+  let analysisPollTimer = null;
+
+  if (startAnalysisBtn) {
+    startAnalysisBtn.addEventListener('click', async () => {
+      startAnalysisBtn.disabled = true;
+      if (analysisProgressSection) analysisProgressSection.classList.remove('hidden');
+      if (analysisStatusText) analysisStatusText.textContent = 'Starting real process_video() with LSTM...';
+      if (timelineContainer) {
+        timelineContainer.innerHTML = '<div class="timeline-empty-msg">Processing video frames with YOLO tracking and Approaching LSTM...</div>';
+      }
+
+      try {
+        const res = await fetch('/api/test_lab/analyze_movement', { method: 'POST' });
+        const data = await res.json();
+        if (data.status === 'started' || data.status === 'running') {
+          pollMovementProgress();
+        } else if (data.error) {
+          alert('Analysis error: ' + data.error);
+          startAnalysisBtn.disabled = false;
+        }
+      } catch (err) {
+        alert('Analysis request failed: ' + err);
+        startAnalysisBtn.disabled = false;
+      }
+    });
+  }
+
+  function pollMovementProgress() {
+    if (analysisPollTimer) clearInterval(analysisPollTimer);
+
+    analysisPollTimer = setInterval(async () => {
+      try {
+        const res = await fetch('/api/test_lab/movement_progress');
+        const data = await res.json();
+        const job = data.job || {};
+
+        if (analysisProgressBar) {
+          analysisProgressBar.style.width = `${job.percent || 0}%`;
+        }
+        if (analysisPercentText) {
+          analysisPercentText.textContent = `${(job.percent || 0).toFixed(1)}%`;
+        }
+        if (analysisStatusText) {
+          analysisStatusText.textContent = `Analyzing Frame ${job.current_frame || 0} / ${job.total_frames || 0}`;
+        }
+        if (analysisElapsedText) {
+          analysisElapsedText.textContent = `Elapsed: ${(job.elapsed_sec || 0).toFixed(1)}s`;
+        }
+
+        if (job.status === 'completed') {
+          clearInterval(analysisPollTimer);
+          if (startAnalysisBtn) startAnalysisBtn.disabled = false;
+          if (analysisStatusText) {
+            analysisStatusText.textContent = `Completed in ${job.elapsed_sec}s (${(job.events || []).length} events detected)`;
+          }
+          renderMovementTimeline(job.events || []);
+        } else if (job.status === 'error') {
+          clearInterval(analysisPollTimer);
+          if (startAnalysisBtn) startAnalysisBtn.disabled = false;
+          if (analysisStatusText) {
+            analysisStatusText.textContent = `Error: ${job.error_message}`;
+          }
+        }
+      } catch (e) {
+        console.warn('Progress poll error:', e);
+      }
+    }, 500);
+  }
+
+  function renderMovementTimeline(events) {
+    if (!timelineContainer) return;
+    timelineContainer.innerHTML = '';
+
+    if (timelineCountBadge) {
+      timelineCountBadge.textContent = `${events.length} Events`;
+    }
+
+    if (events.length === 0) {
+      timelineContainer.innerHTML = '<div class="timeline-empty-msg">No high-risk movement alerts triggered in this clip.</div>';
+      return;
+    }
+
+    events.forEach((ev) => {
+      const card = document.createElement('div');
+      const movLower = (ev.movement || 'stationary').toLowerCase().replace(' ', '-');
+      card.className = `timeline-card event-${movLower}`;
+
+      const movConf = (ev.movement_confidence * 100).toFixed(0);
+      const riskConf = (ev.risk_confidence * 100).toFixed(0);
+
+      card.innerHTML = `
+        <div class="timeline-left">
+          <span class="timeline-frame-label">FRAME ${ev.frame} • TRACK #${ev.track_id}</span>
+          <span class="timeline-obj-title">${(ev.object || 'object').toUpperCase()} (${ev.position})</span>
+          <div class="timeline-badges-row">
+            <span class="timeline-badge badge-${movLower}">${ev.movement.toUpperCase()} (${movConf}%)</span>
+            <span class="timeline-badge badge-risk-${(ev.risk || 'low').toLowerCase()}">RISK: ${ev.risk} (${riskConf}%)</span>
+          </div>
+        </div>
+        <div class="timeline-right">
+          <span class="timeline-badge badge-action-${(ev.final_action || 'wait').toLowerCase()}">${ev.final_action || 'WAIT'}</span>
+        </div>
+      `;
+      timelineContainer.appendChild(card);
+    });
+  }
+
+  // --- Test Lab Queries & Pipeline Latency Trace ---
+  if (testLabQueryForm) {
+    testLabQueryForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const q = testLabQueryInput.value.trim();
+      if (!q) return;
+      testLabQueryInput.value = '';
+      sendTestLabQuery(q);
+    });
+  }
+
+  testLabPromptChips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const q = chip.dataset.query;
+      if (q) sendTestLabQuery(q);
+    });
+  });
+
+  async function sendTestLabQuery(query) {
+    setOrbState('ANALYZING');
+    playEarcon('thinking');
+
+    try {
+      const res = await fetch('/api/test_lab/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: query })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        displayAssistantResponse(data);
+        renderPipelineTrace(data.stage_latencies || {}, data.time_to_answer_ms || 0);
+      }
+    } catch (err) {
+      console.warn('Test Lab query failed:', err);
+      setOrbState('STANDBY');
+    }
+  }
+
+  function renderPipelineTrace(latencies, totalMs) {
+    if (pipelineTotalMs) {
+      pipelineTotalMs.textContent = `Total: ${totalMs.toFixed(1)} ms`;
+    }
+
+    const nlp = latencies.nlp_ms || 0;
+    const yolo = latencies.yolo_ms || 0;
+    const spatial = latencies.spatial_ms || 0;
+    const risk = latencies.risk_ms || 0;
+    const dqn = latencies.dqn_ms || 0;
+
+    const maxVal = Math.max(1, totalMs);
+
+    if (latNlp) latNlp.textContent = `${nlp.toFixed(1)} ms`;
+    if (barNlp) barNlp.style.width = `${Math.min(100, (nlp / maxVal) * 100)}%`;
+
+    if (latYolo) latYolo.textContent = `${yolo.toFixed(1)} ms`;
+    if (barYolo) barYolo.style.width = `${Math.min(100, (yolo / maxVal) * 100)}%`;
+
+    if (latSpatial) latSpatial.textContent = `${spatial.toFixed(1)} ms`;
+    if (barSpatial) barSpatial.style.width = `${Math.min(100, (spatial / maxVal) * 100)}%`;
+
+    if (latRisk) latRisk.textContent = `${risk.toFixed(1)} ms`;
+    if (barRisk) barRisk.style.width = `${Math.min(100, (risk / maxVal) * 100)}%`;
+
+    if (latDqn) latDqn.textContent = `${dqn.toFixed(1)} ms`;
+    if (barDqn) barDqn.style.width = `${Math.min(100, (dqn / maxVal) * 100)}%`;
+  }
+
+  // ==========================================================================
+  // PHASE 5: MODEL EVALUATION DASHBOARD
+  // ==========================================================================
+  const refreshEvalBtn = document.getElementById('refreshEvalBtn');
+  if (refreshEvalBtn) {
+    refreshEvalBtn.addEventListener('click', loadEvaluationMetrics);
+  }
+
+  async function loadEvaluationMetrics() {
+    try {
+      const res = await fetch('/api/evaluation');
+      const resp = await res.json();
+      if (resp.status !== 'success' || !resp.data) return;
+
+      const d = resp.data;
+
+      // Executive Metrics
+      const overall = d.overall_results || {};
+      const evalPrec = document.getElementById('evalPrecision');
+      const evalRec = document.getElementById('evalRecall');
+      const evalMap50 = document.getElementById('evalMap50');
+      const evalMap5095 = document.getElementById('evalMap5095');
+
+      if (evalPrec) evalPrec.textContent = (overall.precision !== undefined) ? `${(overall.precision * 100).toFixed(1)}%` : '--';
+      if (evalRec) evalRec.textContent = (overall.recall !== undefined) ? `${(overall.recall * 100).toFixed(1)}%` : '--';
+      if (evalMap50) evalMap50.textContent = (overall.mAP50 !== undefined) ? `${(overall.mAP50 * 100).toFixed(1)}%` : '--';
+      if (evalMap5095) evalMap5095.textContent = (overall.mAP50_95 !== undefined) ? `${(overall.mAP50_95 * 100).toFixed(1)}%` : '--';
+
+      // Door Detection Specifics
+      const door = d.door_results || {};
+      const evalDoorPrec = document.getElementById('evalDoorPrecision');
+      const evalDoorRec = document.getElementById('evalDoorRecall');
+      const evalDoorMap50 = document.getElementById('evalDoorMap50');
+      const evalDoorMap5095 = document.getElementById('evalDoorMap5095');
+
+      if (evalDoorPrec) evalDoorPrec.textContent = (door.precision !== undefined) ? `${(door.precision * 100).toFixed(1)}%` : '--';
+      if (evalDoorRec) evalDoorRec.textContent = (door.recall !== undefined) ? `${(door.recall * 100).toFixed(1)}%` : '--';
+      if (evalDoorMap50) evalDoorMap50.textContent = (door.mAP50 !== undefined) ? `${(door.mAP50 * 100).toFixed(1)}%` : '--';
+      if (evalDoorMap5095) evalDoorMap5095.textContent = (door.mAP50_95 !== undefined) ? `${(door.mAP50_95 * 100).toFixed(1)}%` : '--';
+
+      // Comparison Table
+      const comp = d.comparison_with_experiment_01 || {};
+      const compBody = document.getElementById('evalComparisonTableBody');
+      if (compBody) {
+        compBody.innerHTML = `
+          <tr>
+            <td><strong>mAP @ 0.50</strong></td>
+            <td>${(comp.experiment_01_mAP50 * 100).toFixed(1)}%</td>
+            <td>${(comp.experiment_02_mAP50 * 100).toFixed(1)}%</td>
+            <td><span class="delta-badge">+${((comp.experiment_02_mAP50 - comp.experiment_01_mAP50) * 100).toFixed(2)}%</span></td>
+          </tr>
+          <tr>
+            <td><strong>mAP @ 0.50:0.95</strong></td>
+            <td>${(comp.experiment_01_mAP50_95 * 100).toFixed(1)}%</td>
+            <td>${(comp.experiment_02_mAP50_95 * 100).toFixed(1)}%</td>
+            <td><span class="delta-badge">+${((comp.experiment_02_mAP50_95 - comp.experiment_01_mAP50_95) * 100).toFixed(2)}%</span></td>
+          </tr>
+          <tr>
+            <td><strong>Overall Recall</strong></td>
+            <td>${(comp.experiment_01_recall * 100).toFixed(1)}%</td>
+            <td>${(comp.experiment_02_recall * 100).toFixed(1)}%</td>
+            <td><span class="delta-badge">+${((comp.experiment_02_recall - comp.experiment_01_recall) * 100).toFixed(2)}%</span></td>
+          </tr>
+        `;
+      }
+
+      // Dataset Info
+      const ds = d.dataset || {};
+      const dsInfo = document.getElementById('evalDatasetInfo');
+      if (dsInfo) {
+        dsInfo.innerHTML = `
+          <div class="info-row"><span class="info-key">Base Dataset:</span><span class="info-val">${ds.base}</span></div>
+          <div class="info-row"><span class="info-key">Custom Extension:</span><span class="info-val">${ds.added_dataset}</span></div>
+          <div class="info-row"><span class="info-key">Total Model Classes:</span><span class="info-val">${ds.classes}</span></div>
+          <div class="info-row"><span class="info-key">Train Images / Instances:</span><span class="info-val">${ds.train_images} / ${ds.train_instances}</span></div>
+          <div class="info-row"><span class="info-key">Validation Instances:</span><span class="info-val">${ds.val_instances} (COCO: ${ds.coco_val_instances}, Door: ${ds.door_val_instances})</span></div>
+        `;
+      }
+
+      // Training Hyperparameters
+      const tr = d.training || {};
+      const trInfo = document.getElementById('evalTrainingInfo');
+      if (trInfo) {
+        trInfo.innerHTML = `
+          <div class="info-row"><span class="info-key">Model Base Architecture:</span><span class="info-val">${d.model} (${d.pretrained ? 'Pretrained' : 'Custom'})</span></div>
+          <div class="info-row"><span class="info-key">Training Epochs:</span><span class="info-val">${tr.epochs}</span></div>
+          <div class="info-row"><span class="info-key">Input Image Size:</span><span class="info-val">${tr.image_size} x ${tr.image_size}</span></div>
+          <div class="info-row"><span class="info-key">Batch Size:</span><span class="info-val">${tr.batch_size}</span></div>
+          <div class="info-row"><span class="info-key">Optimizer:</span><span class="info-val">${tr.optimizer} (Seed: ${tr.seed})</span></div>
+        `;
+      }
+
+      // CNN Architecture Badges
+      const cnnGrid = document.getElementById('evalCnnGrid');
+      if (cnnGrid) {
+        cnnGrid.innerHTML = '';
+        const cnnList = d.cnn_architectures_implemented || ['VGG', 'RESNET', 'MOBILENET', 'LENET5', 'GOOGLENET', 'ALEXNET'];
+        cnnList.forEach((arch) => {
+          const chip = document.createElement('div');
+          chip.className = 'cnn-card-chip';
+          chip.innerHTML = `<span class="cnn-chip-dot"></span><span>${arch}</span>`;
+          cnnGrid.appendChild(chip);
+        });
+      }
+
+      // Notes List
+      const notesList = document.getElementById('evalNotesList');
+      if (notesList) {
+        notesList.innerHTML = '';
+        (d.notes || []).forEach((note) => {
+          const li = document.createElement('li');
+          li.textContent = note;
+          notesList.appendChild(li);
+        });
+      }
+    } catch (err) {
+      console.warn('Failed to load evaluation report:', err);
+    }
+  }
+
+  // Connect WebSocket on load
   window.addEventListener('DOMContentLoaded', () => {
     connectWebSocket();
   });

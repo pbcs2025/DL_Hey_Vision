@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Vision Assistant — Assistive Spatial HUD</title>
-  <meta name="description" content="Real-time hands-free assistive vision assistant with continuous object detection, spatial guidance, and fuzzy voice control.">
+  <title>AI Vision Assistant — Assistive Spatial HUD & Test Lab</title>
+  <meta name="description" content="Autonomous assistive vision assistant with continuous object detection, hands-free voice control, proactive hazard monitoring, Test Lab, and model evaluation.">
   <link rel="stylesheet" href="/static/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,6 +44,7 @@
         <span class="badge">Hands-Free "Hey Vision"</span>
         <span class="badge">Spacebar Fallback</span>
         <span class="badge">Continuous Live Detection</span>
+        <span class="badge">Phase 5 Test Lab</span>
       </div>
     </div>
   </div>
@@ -63,32 +64,41 @@
           <span class="live-dot pulse"></span>
           <span class="live-label" id="sourceLabel">WEBCAM LIVE</span>
         </div>
-        <div class="source-toggle-group">
-          <button id="sourceWebcamBtn" class="source-btn active" title="Switch to live webcam">🎥 WEBCAM</button>
-          <button id="sourceVideoBtn" class="source-btn" title="Switch to demo test video file">🎬 DEMO VIDEO</button>
-        </div>
       </div>
 
-      <!-- Real-Time FPS & Latency Metrics Bar -->
-      <div class="header-metrics">
-        <div class="metric-item">
-          <span class="metric-label">CAM FPS:</span>
-          <span id="camFpsVal" class="metric-val text-cyan">--</span>
-        </div>
-        <div class="metric-separator">|</div>
-        <div class="metric-item">
-          <span class="metric-label">DET FPS:</span>
-          <span id="detFpsVal" class="metric-val text-cyan">--</span>
-        </div>
-        <div class="metric-separator">|</div>
-        <div class="metric-item">
-          <span class="metric-label">DET LATENCY:</span>
-          <span id="detLatVal" class="metric-val text-cyan">-- ms</span>
-        </div>
-      </div>
+      <!-- Navigation Mode Tabs -->
+      <nav class="hud-mode-tabs" role="tablist" aria-label="Application View Modes">
+        <button id="tabWalk" class="mode-tab active" role="tab" aria-selected="true" data-tab="walk">
+          <span class="tab-icon">🚶</span> <span class="tab-label">LIVE WALK MODE</span>
+        </button>
+        <button id="tabTestLab" class="mode-tab" role="tab" aria-selected="false" data-tab="test-lab">
+          <span class="tab-icon">🧪</span> <span class="tab-label">TEST LAB</span>
+        </button>
+        <button id="tabEval" class="mode-tab" role="tab" aria-selected="false" data-tab="eval">
+          <span class="tab-icon">📊</span> <span class="tab-label">MODEL EVALUATION</span>
+        </button>
+      </nav>
 
-      <!-- Assistant Status Orb -->
+      <!-- Assistant Status Orb & Header Right -->
       <div class="header-right">
+        <!-- Live Real-Time FPS & Latency Metrics Bar -->
+        <div class="header-metrics">
+          <div class="metric-item">
+            <span class="metric-label">CAM FPS:</span>
+            <span id="camFpsVal" class="metric-val text-cyan">--</span>
+          </div>
+          <div class="metric-separator">|</div>
+          <div class="metric-item">
+            <span class="metric-label">DET FPS:</span>
+            <span id="detFpsVal" class="metric-val text-cyan">--</span>
+          </div>
+          <div class="metric-separator">|</div>
+          <div class="metric-item">
+            <span class="metric-label">DET LATENCY:</span>
+            <span id="detLatVal" class="metric-val text-cyan">-- ms</span>
+          </div>
+        </div>
+
         <div class="status-orb-container">
           <div id="statusOrb" class="status-orb status-standby"></div>
           <div class="status-info">
@@ -99,8 +109,8 @@
       </div>
     </header>
 
-    <!-- Main Workspace: Video Feed & Spatial HUD -->
-    <main class="hud-main">
+    <!-- VIEW 1: LIVE WALK MODE -->
+    <main id="viewWalkMode" class="hud-main view-container">
 
       <!-- Left Column: Primary Video Canvas & Spatial Overlay -->
       <section class="viewport-section" aria-label="Live Video Viewport">
@@ -130,6 +140,15 @@
               <span class="zone-name">RIGHT ZONE</span>
               <span id="zoneRightCount" class="zone-badge">0</span>
             </div>
+          </div>
+        </div>
+
+        <!-- Source Switcher Bar for Live Walk -->
+        <div class="live-source-bar">
+          <span class="source-bar-label">STREAM SOURCE:</span>
+          <div class="source-toggle-group">
+            <button id="sourceWebcamBtn" class="source-btn active" title="Switch to live webcam">🎥 LIVE WEBCAM</button>
+            <button id="sourceVideoBtn" class="source-btn" title="Switch to demo test video file">🎬 DEMO VIDEO</button>
           </div>
         </div>
 
@@ -177,7 +196,7 @@
           </div>
         </div>
 
-        <!-- Direct Query Input (Always Works Even if Mic Unavailable) -->
+        <!-- Direct Query Input -->
         <div class="glass-card query-input-card">
           <h2 class="card-title">DIRECT QUERY</h2>
           <form id="queryForm" class="query-form">
@@ -201,7 +220,7 @@
             <span id="alertsCountBadge" class="meta-tag">0 Alerts</span>
           </div>
           <div class="dqn-trace-container" id="dqnTraceContainer">
-            <div class="dqn-empty-msg">Evaluating Risk ANN + DQN @ 2 Hz...</div>
+            <div class="dqn-empty-msg">Evaluating Risk ANN + DQN @ 2 Hz on distinct detection frames...</div>
           </div>
         </div>
 
@@ -230,13 +249,345 @@
             </div>
             <div class="telem-row">
               <span class="telem-key">Hazard Loop:</span>
-              <span id="telemHazard" class="telem-val">Risk ANN + DQN (2 Hz / 7s Cooldown)</span>
+              <span id="telemHazard" class="telem-val">Risk ANN + DQN (2 Hz / 10s Cooldown)</span>
             </div>
           </div>
         </div>
 
       </aside>
     </main>
+
+    <!-- VIEW 2: TEST LAB (PHASE 5) -->
+    <main id="viewTestLab" class="test-lab-view view-container hidden">
+      <div class="test-lab-layout">
+        
+        <!-- Left Main Column: Media Picker, Viewer & Movement Timeline -->
+        <div class="test-lab-main-col">
+          
+          <!-- Media Source & Sample Picker Bar -->
+          <div class="glass-card test-lab-card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <h2 class="card-title">MEDIA SELECTOR & SAMPLE PICKER</h2>
+                <span class="card-subtitle">Choose from verified test assets or upload an image/video file</span>
+              </div>
+              <span id="activeMediaBadge" class="meta-tag text-cyan">door_test.png (IMAGE)</span>
+            </div>
+
+            <!-- Sample Picker Buttons -->
+            <div class="samples-picker-row">
+              <span class="picker-label">SAMPLES:</span>
+              <div class="sample-buttons-group">
+                <button class="sample-btn active" data-sample="door_test.png">🚪 door_test.png</button>
+                <button class="sample-btn" data-sample="test_scene.jpg">🛋️ test_scene.jpg</button>
+                <button class="sample-btn" data-sample="ocr_test.png">🔤 ocr_test.png</button>
+                <button class="sample-btn" data-sample="test_video.mp4">🎬 test_video.mp4</button>
+              </div>
+            </div>
+
+            <!-- Upload Dropzone -->
+            <div class="upload-dropzone" id="uploadDropzone">
+              <input type="file" id="mediaFileInput" accept=".jpg,.jpeg,.png,.webp,.mp4,.avi,.mov" class="hidden-file-input">
+              <div class="dropzone-content">
+                <span class="upload-icon">📁</span>
+                <span class="upload-prompt">Drag & Drop media here, or <button type="button" id="browseBtn" class="link-btn">browse file</button></span>
+                <span class="upload-limits">Images (JPG, PNG, WEBP) or Videos (MP4, AVI) — Max 50 MB (Localhost only)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Media Viewport with Bounding Boxes -->
+          <div class="glass-card test-lab-card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <h2 class="card-title" id="viewportMediaTitle">MEDIA DETECTION VIEWPORT</h2>
+                <span id="viewportMediaSub" class="card-subtitle">Showing bounding boxes & confidence on every frame</span>
+              </div>
+              <div class="viewport-actions">
+                <button id="streamVideoBtn" class="cyber-btn-small hidden">📡 STREAM IN LIVE DETECTOR</button>
+              </div>
+            </div>
+
+            <div class="test-media-container" id="testMediaContainer">
+              <!-- Image view with annotated bounding boxes -->
+              <div id="testImageWrapper" class="test-image-wrapper">
+                <img id="testLabImage" src="/api/test_lab/annotated_image" alt="Annotated Test Image" class="test-lab-img">
+              </div>
+
+              <!-- Native HTML5 Video View -->
+              <div id="testVideoWrapper" class="test-video-wrapper hidden">
+                <video id="testLabVideo" controls playsinline class="test-lab-video" src="/api/test_lab/media_file"></video>
+              </div>
+            </div>
+
+            <!-- Detection summary tags -->
+            <div class="media-detections-summary" id="mediaDetectionsSummary">
+              <!-- Dynamically populated tags for detected objects -->
+            </div>
+          </div>
+
+          <!-- Movement Analysis Section (Shows for Video) -->
+          <div id="movementAnalysisCard" class="glass-card movement-analysis-card hidden">
+            <div class="card-header">
+              <div class="card-title-group">
+                <h2 class="card-title">TEMPORAL MOVEMENT ANALYSIS</h2>
+                <span class="card-subtitle">Runs real process_video() with LSTM approaching tracking, Risk ANN, and Assistive DQN</span>
+              </div>
+              <button id="startAnalysisBtn" class="cyber-btn primary-pulse">
+                <span class="btn-text">ANALYSE MOVEMENT</span>
+              </button>
+            </div>
+
+            <!-- Analysis Progress Section -->
+            <div id="analysisProgressSection" class="analysis-progress-section hidden">
+              <div class="progress-bar-container">
+                <div id="analysisProgressBar" class="progress-bar-fill" style="width: 0%"></div>
+              </div>
+              <div class="progress-info-row">
+                <span id="analysisStatusText" class="progress-status">Initializing video pipeline...</span>
+                <span id="analysisPercentText" class="progress-percent">0%</span>
+                <span id="analysisElapsedText" class="progress-elapsed">Elapsed: 0.0s</span>
+              </div>
+            </div>
+
+            <!-- Movement Events Timeline -->
+            <div class="timeline-wrapper">
+              <div class="timeline-header-row">
+                <span class="timeline-title">EVENT TIMELINE</span>
+                <span id="timelineCountBadge" class="meta-tag">0 Events</span>
+              </div>
+              <div class="timeline-container" id="timelineContainer">
+                <div class="timeline-empty-msg">Click 'Analyse Movement' to run video pipeline and extract temporal events.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Sidebar: Queries, TTS, and Full Latency Trace -->
+        <div class="test-lab-sidebar-col">
+
+          <!-- Test Lab Response Card -->
+          <div class="glass-card response-card">
+            <div class="card-header">
+              <h2 class="card-title">MEDIA ASSISTANT RESPONSE</h2>
+              <button id="testLabReplayBtn" class="icon-btn" title="Replay voice response">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                </svg>
+              </button>
+            </div>
+            <div class="response-body">
+              <p id="testLabResponseText" class="response-text">Ready. Ask any question on this media via voice ("Hey Vision"), spacebar, typed prompt, or chips.</p>
+              <div class="response-meta">
+                <span id="testLabResponseLatency" class="meta-tag">Latency: -- ms</span>
+                <span id="testLabResponseIntent" class="meta-tag">Intent: READY</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Prompt Chips on Active Media -->
+          <div class="glass-card chips-card">
+            <h2 class="card-title">QUICK PROMPTS ON LOADED MEDIA</h2>
+            <div class="chips-grid">
+              <button class="test-lab-prompt-chip" data-query="Where is the door?">Where is the door?</button>
+              <button class="test-lab-prompt-chip" data-query="What is in front of me?">What is in front of me?</button>
+              <button class="test-lab-prompt-chip" data-query="Describe the room.">Describe the room</button>
+              <button class="test-lab-prompt-chip" data-query="Is it safe to walk forward?">Is it safe to walk?</button>
+              <button class="test-lab-prompt-chip" data-query="Read any text in view.">Read text in view</button>
+              <button class="test-lab-prompt-chip" data-query="Find the chair.">Find the chair</button>
+            </div>
+          </div>
+
+          <!-- Direct Query Form for Test Lab -->
+          <div class="glass-card query-input-card">
+            <h2 class="card-title">QUERY LOADED MEDIA</h2>
+            <form id="testLabQueryForm" class="query-form">
+              <input type="text" id="testLabQueryInput" placeholder="Ask about this media (e.g. 'read text', 'where is door')..." autocomplete="off">
+              <button type="submit" id="testLabSendQueryBtn" class="send-btn" aria-label="Send Query">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </button>
+            </form>
+            <div class="spacebar-instruction">
+              <kbd>SPACEBAR</kbd> <span>or say "Hey Vision" to ask hands-free</span>
+            </div>
+          </div>
+
+          <!-- Full Pipeline Latency Trace Card -->
+          <div class="glass-card pipeline-trace-card">
+            <div class="card-header">
+              <h2 class="card-title">FULL PIPELINE LATENCY TRACE</h2>
+              <span id="pipelineTotalMs" class="meta-tag text-cyan">Total: -- ms</span>
+            </div>
+            <div class="pipeline-trace-body">
+              <div class="latency-stage-row">
+                <span class="stage-name">NLP Intent:</span>
+                <div class="stage-bar-wrap"><div id="barNlp" class="stage-bar-fill" style="width: 0%"></div></div>
+                <span id="latNlp" class="stage-time">-- ms</span>
+              </div>
+              <div class="latency-stage-row">
+                <span class="stage-name">YOLO Detection:</span>
+                <div class="stage-bar-wrap"><div id="barYolo" class="stage-bar-fill" style="width: 0%"></div></div>
+                <span id="latYolo" class="stage-time">-- ms</span>
+              </div>
+              <div class="latency-stage-row">
+                <span class="stage-name">Spatial Reasoning:</span>
+                <div class="stage-bar-wrap"><div id="barSpatial" class="stage-bar-fill" style="width: 0%"></div></div>
+                <span id="latSpatial" class="stage-time">-- ms</span>
+              </div>
+              <div class="latency-stage-row">
+                <span class="stage-name">Risk ANN:</span>
+                <div class="stage-bar-wrap"><div id="barRisk" class="stage-bar-fill" style="width: 0%"></div></div>
+                <span id="latRisk" class="stage-time">-- ms</span>
+              </div>
+              <div class="latency-stage-row">
+                <span class="stage-name">Assistive DQN:</span>
+                <div class="stage-bar-wrap"><div id="barDqn" class="stage-bar-fill" style="width: 0%"></div></div>
+                <span id="latDqn" class="stage-time">-- ms</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+
+    <!-- VIEW 3: MODEL EVALUATION -->
+    <main id="viewEvaluation" class="evaluation-view view-container hidden">
+      <div class="evaluation-container">
+        
+        <!-- Header & Refresh Button -->
+        <div class="eval-header-card glass-card">
+          <div class="eval-title-group">
+            <h1 class="eval-title" id="evalExperimentTitle">EXPERIMENT 02 EVALUATION REPORT</h1>
+            <p class="eval-subtitle" id="evalModelSubtitle">Dynamic Benchmark Data Loaded Directly from experiment_02_summary.json</p>
+          </div>
+          <button id="refreshEvalBtn" class="cyber-btn-small">🔄 REFRESH REPORT</button>
+        </div>
+
+        <!-- Executive Metrics Grid -->
+        <div class="eval-metrics-grid">
+          <div class="eval-metric-card glass-card">
+            <span class="eval-metric-label">PRECISION</span>
+            <span class="eval-metric-val text-cyan" id="evalPrecision">--</span>
+            <span class="eval-metric-sub">Overall Detection Precision</span>
+          </div>
+          <div class="eval-metric-card glass-card">
+            <span class="eval-metric-label">RECALL</span>
+            <span class="eval-metric-val text-cyan" id="evalRecall">--</span>
+            <span class="eval-metric-sub">Overall Detection Recall</span>
+          </div>
+          <div class="eval-metric-card glass-card">
+            <span class="eval-metric-label">mAP @ 0.50</span>
+            <span class="eval-metric-val text-green" id="evalMap50">--</span>
+            <span class="eval-metric-sub">Mean Average Precision (0.50 IoU)</span>
+          </div>
+          <div class="eval-metric-card glass-card">
+            <span class="eval-metric-label">mAP @ 0.50:0.95</span>
+            <span class="eval-metric-val text-green" id="evalMap5095">--</span>
+            <span class="eval-metric-sub">Rigorous Multi-IoU Average</span>
+          </div>
+        </div>
+
+        <!-- Custom Class Evaluation: DeepDoors2 Door Detection -->
+        <div class="glass-card eval-door-card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h2 class="card-title">CUSTOM CLASS EVALUATION: DOOR DETECTION (DEEPDOORS2)</h2>
+              <span class="card-subtitle">Specialized door detection metrics evaluated on 450 validation doorway instances</span>
+            </div>
+            <span class="meta-tag text-green">13-Class Extended Model</span>
+          </div>
+          <div class="door-metrics-row">
+            <div class="door-metric-box">
+              <span class="door-box-label">DOOR PRECISION</span>
+              <span class="door-box-val text-cyan" id="evalDoorPrecision">--</span>
+            </div>
+            <div class="door-metric-box">
+              <span class="door-box-label">DOOR RECALL</span>
+              <span class="door-box-val text-cyan" id="evalDoorRecall">--</span>
+            </div>
+            <div class="door-metric-box">
+              <span class="door-box-label">DOOR mAP@50</span>
+              <span class="door-box-val text-green" id="evalDoorMap50">--</span>
+            </div>
+            <div class="door-metric-box">
+              <span class="door-box-label">DOOR mAP@50:95</span>
+              <span class="door-box-val text-green" id="evalDoorMap5095">--</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comparison Table: Experiment 01 Baseline vs Experiment 02 Extended -->
+        <div class="glass-card eval-comparison-card">
+          <div class="card-header">
+            <h2 class="card-title">COMPARISON: EXPERIMENT 01 (BASELINE) VS EXPERIMENT 02 (EXTENDED)</h2>
+            <span class="meta-tag">Zero Regression on Original COCO Classes</span>
+          </div>
+          <div class="table-container">
+            <table class="cyber-table">
+              <thead>
+                <tr>
+                  <th>EVALUATION METRIC</th>
+                  <th>EXPERIMENT 01 (COCO BASELINE)</th>
+                  <th>EXPERIMENT 02 (COCO + DEEPDOORS2)</th>
+                  <th>DELTA IMPROVEMENT</th>
+                </tr>
+              </thead>
+              <tbody id="evalComparisonTableBody">
+                <!-- Dynamically populated from JSON -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Two Column Details: Dataset Partitions & Training Hyperparameters -->
+        <div class="eval-two-col-grid">
+          <div class="glass-card eval-info-card">
+            <h2 class="card-title">DATASET PARTITION & DISTRIBUTION</h2>
+            <div class="eval-info-list" id="evalDatasetInfo">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+          <div class="glass-card eval-info-card">
+            <h2 class="card-title">TRAINING HYPERPARAMETERS</h2>
+            <div class="eval-info-list" id="evalTrainingInfo">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- CNN Architecture Experiments Portfolio -->
+        <div class="glass-card eval-cnn-card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h2 class="card-title">CNN ARCHITECTURE EXPERIMENTS PORTFOLIO</h2>
+              <span class="card-subtitle">Deep neural network models implemented in src/cnn/architectures/</span>
+            </div>
+            <span class="meta-tag text-cyan">Exploratory Suite</span>
+          </div>
+          <div class="cnn-badges-grid" id="evalCnnGrid">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Experiment Audit Notes -->
+        <div class="glass-card eval-notes-card">
+          <h2 class="card-title">EXPERIMENT AUDIT & VERIFICATION NOTES</h2>
+          <ul class="eval-notes-list" id="evalNotesList">
+            <!-- Dynamically populated -->
+          </ul>
+        </div>
+
+      </div>
+    </main>
+
   </div>
 
   <script src="/static/app.js"></script>

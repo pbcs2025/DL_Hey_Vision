@@ -1,0 +1,826 @@
+text,intent
+Please tell me what object this is,OBJECT_IDENTIFICATION
+Can you check if a person is coming?,DETECT_APPROACHING
+What is visible in my forward view,FRONT_OBJECTS
+Can you read this notice?,READ_TEXT
+Can you read this for me?,READ_TEXT
+Can you provide more detail?,MORE_DETAIL
+Can you see anything moving toward me?,DETECT_APPROACHING
+Locate the door for me,LOCATE_OBJECT
+Describe what you see,SCENE_DESCRIPTION
+Could you provide more details?,MORE_DETAIL
+Can you check what is ahead?,FRONT_OBJECTS
+Is anyone walking toward me?,DETECT_APPROACHING
+Read the printed words,READ_TEXT
+What else can you explain?,MORE_DETAIL
+What direction is the object?,LOCATE_OBJECT
+What does this label say?,READ_TEXT
+Tell me what is around,SCENE_SUMMARY
+Tell me what the sign says,READ_TEXT
+Is somebody moving toward me?,DETECT_APPROACHING
+Describe my environment,SCENE_DESCRIPTION
+Identify this object,OBJECT_IDENTIFICATION
+What is in this image?,OBJECT_IDENTIFICATION
+Is anything blocking my forward direction?,OBSTACLE_CHECK
+Is something moving closer to me?,DETECT_APPROACHING
+Can you tell me about my environment,SCENE_SUMMARY
+Can you elaborate on that?,MORE_DETAIL
+What does this notice say?,READ_TEXT
+Can you detect someone coming closer?,DETECT_APPROACHING
+Where can I find it?,LOCATE_OBJECT
+Where should I look?,LOCATE_OBJECT
+Is anything getting nearer?,DETECT_APPROACHING
+Can you tell what this object is?,OBJECT_IDENTIFICATION
+What object is this?,OBJECT_IDENTIFICATION
+Is anyone moving closer?,DETECT_APPROACHING
+Tell me if someone is coming closer,DETECT_APPROACHING
+What can you see in front of me?,FRONT_OBJECTS
+Can you tell me its direction?,LOCATE_OBJECT
+Is there an obstacle in my way?,OBSTACLE_CHECK
+What is ahead of me?,FRONT_OBJECTS
+Is there something obstructing my path?,OBSTACLE_CHECK
+Tell me what is ahead,FRONT_OBJECTS
+Can you explain more?,MORE_DETAIL
+What is nearby me?,SCENE_SUMMARY
+What is in my line of sight?,FRONT_OBJECTS
+Give me a little more information,MORE_DETAIL
+Can you briefly summarize what you see?,SCENE_DESCRIPTION
+Describe the surroundings,SCENE_DESCRIPTION
+Tell me what I am looking at,OBJECT_IDENTIFICATION
+Check for anything blocking me,OBSTACLE_CHECK
+Do you see anything in my path?,OBSTACLE_CHECK
+What objects can you see?,SCENE_SUMMARY
+What object do you see?,OBJECT_IDENTIFICATION
+Is someone walking toward my direction?,DETECT_APPROACHING
+Can you check for approaching people?,DETECT_APPROACHING
+Please tell me what this is,OBJECT_IDENTIFICATION
+What can you see ahead of me?,FRONT_OBJECTS
+Describe the surroundings in a few words,SCENE_DESCRIPTION
+What is directly ahead?,FRONT_OBJECTS
+Can you identify the item?,OBJECT_IDENTIFICATION
+Can you check my surroundings?,SCENE_SUMMARY
+Read the poster,READ_TEXT
+Where is the object located?,LOCATE_OBJECT
+Please elaborate,MORE_DETAIL
+Give me more explanation,MORE_DETAIL
+What words do you see?,READ_TEXT
+Can you read this?,READ_TEXT
+Read what is in front of me,READ_TEXT
+Describe what is visible around me,SCENE_SUMMARY
+Can you check the area ahead for obstacles?,OBSTACLE_CHECK
+Tell me the same thing again,REPEAT_RESPONSE
+Is there anything obstructing me?,OBSTACLE_CHECK
+Is there anything blocking my forward path?,OBSTACLE_CHECK
+Read the words for me,READ_TEXT
+Please repeat,REPEAT_RESPONSE
+I need more information,MORE_DETAIL
+Do you detect an obstruction?,OBSTACLE_CHECK
+What is the thing I am looking at?,OBJECT_IDENTIFICATION
+What is present in my surroundings?,SCENE_SUMMARY
+Can you locate that object?,LOCATE_OBJECT
+Is something getting closer?,DETECT_APPROACHING
+What does this board say?,READ_TEXT
+Give me a summary of what you see,SCENE_SUMMARY
+Say it once more,REPEAT_RESPONSE
+Can you describe what the scene looks like?,SCENE_DESCRIPTION
+Tell me about the area around me,SCENE_SUMMARY
+Is someone moving closer to where I am?,DETECT_APPROACHING
+Tell me more about this,MORE_DETAIL
+Identify that object,OBJECT_IDENTIFICATION
+Could you say it again?,REPEAT_RESPONSE
+What do you see around me?,SCENE_SUMMARY
+Give me a short summary of the scene,SCENE_DESCRIPTION
+Give me an overview of the area,SCENE_SUMMARY
+Can you say that one more time?,REPEAT_RESPONSE
+Please provide further explanation,MORE_DETAIL
+What is immediately in front?,FRONT_OBJECTS
+Can you tell if someone is approaching?,DETECT_APPROACHING
+What is that thing?,OBJECT_IDENTIFICATION
+What is written in the image?,READ_TEXT
+What is immediately ahead of me?,FRONT_OBJECTS
+Can you find the exit?,LOCATE_OBJECT
+Is anything directly ahead?,FRONT_OBJECTS
+Can you give me more information?,MORE_DETAIL
+What can you see around me?,SCENE_SUMMARY
+Tell me more about what you saw,MORE_DETAIL
+Can you tell me the position of the door?,LOCATE_OBJECT
+Tell me what is present in the area,SCENE_SUMMARY
+Repeat what you just said,REPEAT_RESPONSE
+Can you explain that further?,MORE_DETAIL
+Tell me if the path ahead is blocked,OBSTACLE_CHECK
+Where can I see the door?,LOCATE_OBJECT
+Please repeat the information,REPEAT_RESPONSE
+What is visible in front of me?,OBJECT_IDENTIFICATION
+Where is the person?,LOCATE_OBJECT
+Describe what is around me briefly,SCENE_DESCRIPTION
+Is there anything in my way ahead?,OBSTACLE_CHECK
+Please repeat that,REPEAT_RESPONSE
+Can you say that again?,REPEAT_RESPONSE
+Is anything approaching me?,DETECT_APPROACHING
+Explain that in more detail,MORE_DETAIL
+Describe what is in front of me,FRONT_OBJECTS
+Can I walk forward?,OBSTACLE_CHECK
+What objects are ahead?,FRONT_OBJECTS
+Say your answer again,REPEAT_RESPONSE
+Is anything moving toward me?,DETECT_APPROACHING
+Please repeat what you said,REPEAT_RESPONSE
+Find its position,LOCATE_OBJECT
+What can you identify in my surroundings?,SCENE_SUMMARY
+Give me a quick environmental overview,SCENE_DESCRIPTION
+Read what is shown,READ_TEXT
+Say the response again,REPEAT_RESPONSE
+Please read this sign,READ_TEXT
+What is around this area?,SCENE_SUMMARY
+Which side is the object located on?,LOCATE_OBJECT
+Is someone getting closer?,DETECT_APPROACHING
+Tell me what item I am seeing,OBJECT_IDENTIFICATION
+Is anything coming nearer?,DETECT_APPROACHING
+Tell me where the object is,LOCATE_OBJECT
+Is anything getting closer to me?,DETECT_APPROACHING
+What is in my immediate surroundings?,SCENE_SUMMARY
+Tell me anything else you know,MORE_DETAIL
+Is something directly blocking me?,OBSTACLE_CHECK
+Is the door on my left or right?,LOCATE_OBJECT
+Please repeat the response,REPEAT_RESPONSE
+Can you tell if my path is blocked?,OBSTACLE_CHECK
+Can you tell me what is directly ahead?,FRONT_OBJECTS
+Can you recognize the object?,OBJECT_IDENTIFICATION
+What do I have in front of me?,FRONT_OBJECTS
+Is anything obstructing my way?,OBSTACLE_CHECK
+Please give me more details,MORE_DETAIL
+What do you notice around me?,SCENE_SUMMARY
+Can you give me a short scene overview?,SCENE_DESCRIPTION
+What objects are immediately ahead?,FRONT_OBJECTS
+What is visible around me?,SCENE_SUMMARY
+Tell me what is visible,SCENE_SUMMARY
+Can you repeat your last message?,REPEAT_RESPONSE
+Where exactly is it?,LOCATE_OBJECT
+Is a person getting closer to me?,DETECT_APPROACHING
+Say the previous answer again,REPEAT_RESPONSE
+What do you see directly in front?,FRONT_OBJECTS
+Can you tell what I am looking at?,OBJECT_IDENTIFICATION
+Give me a general description of my surroundings,SCENE_SUMMARY
+What is this thing?,OBJECT_IDENTIFICATION
+Can you check if my path is clear?,OBSTACLE_CHECK
+Tell me the previous answer again,REPEAT_RESPONSE
+Tell me what is directly in front of me,FRONT_OBJECTS
+Can you recognize that object?,OBJECT_IDENTIFICATION
+Give me an overview of my surroundings,SCENE_SUMMARY
+Can you say the last thing again?,REPEAT_RESPONSE
+Describe my surroundings,SCENE_SUMMARY
+Which side is it on?,LOCATE_OBJECT
+Is it on my left or right?,LOCATE_OBJECT
+What is visible in front of me?,FRONT_OBJECTS
+Is someone moving toward me?,DETECT_APPROACHING
+Can you explain a bit more?,MORE_DETAIL
+Is there anything in front of me?,FRONT_OBJECTS
+Is anything moving in my direction?,DETECT_APPROACHING
+Could you repeat that for me?,REPEAT_RESPONSE
+I need additional information,MORE_DETAIL
+What objects are nearby?,SCENE_SUMMARY
+What is directly ahead of me?,FRONT_OBJECTS
+Give me a description of the environment,SCENE_DESCRIPTION
+Tell me what you can identify,SCENE_SUMMARY
+Tell me its location,LOCATE_OBJECT
+What is the scene like?,SCENE_DESCRIPTION
+Is anybody approaching me?,DETECT_APPROACHING
+Can you repeat?,REPEAT_RESPONSE
+Do I have an obstacle in front of me?,OBSTACLE_CHECK
+What is surrounding me?,SCENE_SUMMARY
+Can you describe my environment briefly?,SCENE_DESCRIPTION
+What am I seeing here?,OBJECT_IDENTIFICATION
+What am I looking at?,OBJECT_IDENTIFICATION
+Is anybody coming closer?,DETECT_APPROACHING
+Please provide more information,MORE_DETAIL
+Are there things in front of me?,FRONT_OBJECTS
+Tell me what is directly in front,FRONT_OBJECTS
+Give me a view of my surroundings,SCENE_SUMMARY
+Is my forward path clear?,OBSTACLE_CHECK
+Say that again,REPEAT_RESPONSE
+What is that item?,OBJECT_IDENTIFICATION
+Tell me what is visible in the scene,SCENE_DESCRIPTION
+Please say it again,REPEAT_RESPONSE
+Is there something in my path?,OBSTACLE_CHECK
+What is ahead in front of me?,FRONT_OBJECTS
+Repeat the last message please,REPEAT_RESPONSE
+Is the path directly ahead clear?,OBSTACLE_CHECK
+What is in the area around me?,SCENE_SUMMARY
+Please repeat your last answer,REPEAT_RESPONSE
+Can you identify things ahead?,FRONT_OBJECTS
+Is anything approaching from the side?,DETECT_APPROACHING
+Can you identify this item for me?,OBJECT_IDENTIFICATION
+What is right ahead?,FRONT_OBJECTS
+Tell me about everything nearby,SCENE_SUMMARY
+Could you say that again?,REPEAT_RESPONSE
+Can you detect anything in front of me that blocks the path?,OBSTACLE_CHECK
+What is located around me?,SCENE_SUMMARY
+Briefly describe what is around me,SCENE_DESCRIPTION
+Can you read the writing?,READ_TEXT
+Is anything moving toward my position?,DETECT_APPROACHING
+What does the sign in front say?,READ_TEXT
+I want additional details,MORE_DETAIL
+Can you tell me where the person is?,LOCATE_OBJECT
+Tell me what the environment looks like,SCENE_DESCRIPTION
+Can you read what is shown?,READ_TEXT
+Can you add more information?,MORE_DETAIL
+Where exactly is the object?,LOCATE_OBJECT
+Are there obstacles ahead?,OBSTACLE_CHECK
+Is my way blocked?,OBSTACLE_CHECK
+Can you tell me what is written?,READ_TEXT
+What am I seeing?,OBJECT_IDENTIFICATION
+Where is that object located?,LOCATE_OBJECT
+Is the way ahead clear?,OBSTACLE_CHECK
+Is my route blocked?,OBSTACLE_CHECK
+Which direction is the exit?,LOCATE_OBJECT
+Can you explain further?,MORE_DETAIL
+Can you check if anything is approaching?,DETECT_APPROACHING
+Read this paper,READ_TEXT
+Give me a quick description of what you see,SCENE_DESCRIPTION
+Can you tell if a person is approaching?,DETECT_APPROACHING
+What is in the direction I'm facing?,FRONT_OBJECTS
+"I didn't hear that, repeat it",REPEAT_RESPONSE
+Please provide more details,MORE_DETAIL
+Please repeat your answer,REPEAT_RESPONSE
+Can you locate a door?,LOCATE_OBJECT
+Is someone coming closer to my position?,DETECT_APPROACHING
+Please say it one more time,REPEAT_RESPONSE
+Tell me what is around me right now,SCENE_SUMMARY
+Is someone approaching from the right?,DETECT_APPROACHING
+Describe the visible environment,SCENE_DESCRIPTION
+Read the writing,READ_TEXT
+Is someone coming in my direction?,DETECT_APPROACHING
+Can you detect an approaching object?,DETECT_APPROACHING
+Identify what is in front of me,OBJECT_IDENTIFICATION
+What is in my forward view?,FRONT_OBJECTS
+Can you identify what is ahead?,FRONT_OBJECTS
+Can you repeat that response?,REPEAT_RESPONSE
+Tell me what is printed,READ_TEXT
+Briefly describe what is visible,SCENE_DESCRIPTION
+Tell me about the area in front of me,FRONT_OBJECTS
+Look ahead and tell me what you see,FRONT_OBJECTS
+Can you describe the visible scene?,SCENE_DESCRIPTION
+Is there anything blocking my path?,OBSTACLE_CHECK
+Tell me a little more,MORE_DETAIL
+Can you check if anything is in my way?,OBSTACLE_CHECK
+Is something preventing me from moving forward?,OBSTACLE_CHECK
+Can you describe my surroundings?,SCENE_SUMMARY
+Tell me what is present nearby,SCENE_SUMMARY
+Describe the area around me,SCENE_SUMMARY
+Can you identify the location of the door?,LOCATE_OBJECT
+Repeat what you just told me,REPEAT_RESPONSE
+Give me the main idea of the scene,SCENE_DESCRIPTION
+What does the area around me look like?,SCENE_DESCRIPTION
+Can you find the chair?,LOCATE_OBJECT
+What is this item?,OBJECT_IDENTIFICATION
+Give me a short environmental description,SCENE_DESCRIPTION
+Where is the chair?,LOCATE_OBJECT
+What is the item in front of me?,OBJECT_IDENTIFICATION
+Can you identify what this object is?,OBJECT_IDENTIFICATION
+Tell me what text you can see,READ_TEXT
+Can you see someone approaching?,DETECT_APPROACHING
+Can you detect anything in my way?,OBSTACLE_CHECK
+What is in my environment?,SCENE_SUMMARY
+Can you check if there is an obstacle ahead?,OBSTACLE_CHECK
+What text is visible?,READ_TEXT
+Describe my surroundings briefly,SCENE_DESCRIPTION
+Is anything coming in my direction?,DETECT_APPROACHING
+Can you read the sign in front?,READ_TEXT
+Is something blocking the way ahead?,OBSTACLE_CHECK
+Is anyone coming closer to my position?,DETECT_APPROACHING
+What does the writing say?,READ_TEXT
+Is there something in front blocking me?,OBSTACLE_CHECK
+What is nearby?,SCENE_SUMMARY
+Read this notice,READ_TEXT
+Tell me what you see in my surroundings,SCENE_SUMMARY
+Tell me where to look,LOCATE_OBJECT
+Can you repeat the last message?,REPEAT_RESPONSE
+Can you repeat the previous message?,REPEAT_RESPONSE
+Give me some more detail,MORE_DETAIL
+Tell me what the scene looks like,SCENE_DESCRIPTION
+Can you repeat the information?,REPEAT_RESPONSE
+Can you find it for me?,LOCATE_OBJECT
+What am I looking at here?,OBJECT_IDENTIFICATION
+What can I see ahead?,FRONT_OBJECTS
+Check if anything is blocking the path,OBSTACLE_CHECK
+Can you see a person approaching?,DETECT_APPROACHING
+Check for obstructions in front,OBSTACLE_CHECK
+Read this message,READ_TEXT
+Can you locate the car?,LOCATE_OBJECT
+Repeat what you said,REPEAT_RESPONSE
+Can you describe the scene?,SCENE_DESCRIPTION
+Tell me where the door is,LOCATE_OBJECT
+What is in front of me?,FRONT_OBJECTS
+Is the path blocked?,OBSTACLE_CHECK
+What is written on this paper?,READ_TEXT
+Give me a quick look at my surroundings,SCENE_SUMMARY
+Tell me something more about it,MORE_DETAIL
+Tell me where that object is,LOCATE_OBJECT
+Can you read the information here?,READ_TEXT
+What words are written here?,READ_TEXT
+Can you tell me what is ahead?,FRONT_OBJECTS
+"I missed that, repeat it",REPEAT_RESPONSE
+Tell me what is visible in front,FRONT_OBJECTS
+Can you tell me what is in front?,FRONT_OBJECTS
+Tell me that again,REPEAT_RESPONSE
+What text is in front of me?,READ_TEXT
+Tell me the text in this image,READ_TEXT
+What is around me?,SCENE_SUMMARY
+Could you elaborate on this?,MORE_DETAIL
+Is a person moving toward me?,DETECT_APPROACHING
+Can you tell me that again?,REPEAT_RESPONSE
+Give me further information,MORE_DETAIL
+Tell me what is printed here,READ_TEXT
+Can you give a quick scene summary?,SCENE_DESCRIPTION
+What do you see directly ahead?,FRONT_OBJECTS
+Read the text for me,READ_TEXT
+Give me a short summary of what you see,SCENE_DESCRIPTION
+Is there anything blocking the way?,OBSTACLE_CHECK
+What does this paper say?,READ_TEXT
+Can you detect an approaching person?,DETECT_APPROACHING
+Can you tell me what is visible?,OBJECT_IDENTIFICATION
+Can you tell what is ahead?,FRONT_OBJECTS
+What is this?,OBJECT_IDENTIFICATION
+Give me a detailed explanation,MORE_DETAIL
+I want more information,MORE_DETAIL
+Describe what is visible,SCENE_DESCRIPTION
+Can you read this label?,READ_TEXT
+Give me a short description of my surroundings,SCENE_DESCRIPTION
+Is something coming toward me?,DETECT_APPROACHING
+Is anything coming closer to me?,DETECT_APPROACHING
+Give me a quick overview of my surroundings,SCENE_SUMMARY
+Is someone coming toward the camera?,DETECT_APPROACHING
+Can you identify the writing?,READ_TEXT
+Can you locate it?,LOCATE_OBJECT
+Tell me more about that result,MORE_DETAIL
+Repeat the last thing,REPEAT_RESPONSE
+Can you check the area in front?,FRONT_OBJECTS
+Can you give me a scene overview?,SCENE_SUMMARY
+Give me some more information,MORE_DETAIL
+Can you tell me more about this?,MORE_DETAIL
+Tell me about what is ahead,FRONT_OBJECTS
+Can you check for anything blocking me?,OBSTACLE_CHECK
+Please say the previous response again,REPEAT_RESPONSE
+Can you briefly describe the scene?,SCENE_DESCRIPTION
+Can I move forward safely?,OBSTACLE_CHECK
+Where is the table?,LOCATE_OBJECT
+Is someone coming closer?,DETECT_APPROACHING
+Is there an obstacle ahead?,OBSTACLE_CHECK
+Is the way in front clear?,OBSTACLE_CHECK
+Tell me more information,MORE_DETAIL
+What objects are in front of me right now?,FRONT_OBJECTS
+What is visible directly in front?,FRONT_OBJECTS
+Describe the scene in a few words,SCENE_DESCRIPTION
+Can you repeat it once more?,REPEAT_RESPONSE
+Which side is the car on?,LOCATE_OBJECT
+What more can you tell me?,MORE_DETAIL
+Can you identify what I am looking at?,OBJECT_IDENTIFICATION
+Can you see anything blocking my path?,OBSTACLE_CHECK
+Please tell me more,MORE_DETAIL
+Is there an obstruction ahead?,OBSTACLE_CHECK
+Can you see anything getting closer?,DETECT_APPROACHING
+Is someone getting nearer to me?,DETECT_APPROACHING
+I need more details,MORE_DETAIL
+Tell me what is in the area ahead of me,FRONT_OBJECTS
+Explain a little more,MORE_DETAIL
+What objects can you see ahead?,FRONT_OBJECTS
+Give me a concise description of the scene,SCENE_DESCRIPTION
+Is anyone coming toward me?,DETECT_APPROACHING
+Tell me what is in my environment,SCENE_SUMMARY
+Tell me where the entrance is,LOCATE_OBJECT
+Repeat the information,REPEAT_RESPONSE
+Is anybody moving toward me?,DETECT_APPROACHING
+Give me additional information,MORE_DETAIL
+What is present around me?,SCENE_SUMMARY
+Can you detect anything approaching?,DETECT_APPROACHING
+Can you see anyone coming closer?,DETECT_APPROACHING
+What objects are present nearby?,SCENE_SUMMARY
+Give me a concise scene description,SCENE_DESCRIPTION
+Which side is the door on?,LOCATE_OBJECT
+Can you give me an overview?,SCENE_SUMMARY
+Can you identify the thing I am looking at?,OBJECT_IDENTIFICATION
+What is written on this board?,READ_TEXT
+Tell me all the visible text,READ_TEXT
+Can you repeat your response?,REPEAT_RESPONSE
+Can you tell me the object's name?,OBJECT_IDENTIFICATION
+What information is written here?,READ_TEXT
+Repeat your last response,REPEAT_RESPONSE
+Is there a door nearby?,LOCATE_OBJECT
+What is in my forward direction?,FRONT_OBJECTS
+Can you give me a quick scene description?,SCENE_DESCRIPTION
+Is someone walking closer to me?,DETECT_APPROACHING
+Read the text in the image,READ_TEXT
+What is present ahead?,FRONT_OBJECTS
+Is anything preventing me from going ahead?,OBSTACLE_CHECK
+Where is the exit?,LOCATE_OBJECT
+Is a person moving closer?,DETECT_APPROACHING
+Identify the object in view,OBJECT_IDENTIFICATION
+What do you see in the environment?,SCENE_SUMMARY
+What am I looking at in front of me?,OBJECT_IDENTIFICATION
+Which direction should I look?,LOCATE_OBJECT
+What does the printed text say?,READ_TEXT
+Give me a general view of my surroundings,SCENE_SUMMARY
+Tell me what this item is,OBJECT_IDENTIFICATION
+Is something approaching from ahead?,DETECT_APPROACHING
+Can you read the poster?,READ_TEXT
+Give me more context,MORE_DETAIL
+What else can you tell me about it?,MORE_DETAIL
+Give me some additional information,MORE_DETAIL
+What direction is it in?,LOCATE_OBJECT
+What is in front of my position?,FRONT_OBJECTS
+Can you tell me anything else?,MORE_DETAIL
+Tell me what this scene contains,SCENE_DESCRIPTION
+Are there objects in front of me?,FRONT_OBJECTS
+Can you locate the table?,LOCATE_OBJECT
+Is someone coming toward me?,DETECT_APPROACHING
+What is shown in front of me?,OBJECT_IDENTIFICATION
+Briefly describe my environment,SCENE_DESCRIPTION
+Could you repeat the answer?,REPEAT_RESPONSE
+Can you identify the object I see?,OBJECT_IDENTIFICATION
+Can you repeat the last thing?,REPEAT_RESPONSE
+Give me a quick description of the surroundings,SCENE_DESCRIPTION
+What objects are around me?,SCENE_SUMMARY
+Explain further,MORE_DETAIL
+What can you see in the area?,SCENE_SUMMARY
+Tell me what that is,OBJECT_IDENTIFICATION
+Give me a quick summary,SCENE_DESCRIPTION
+Can you locate the entrance?,LOCATE_OBJECT
+Can you tell me what is nearby?,SCENE_SUMMARY
+Can you tell me what you see?,SCENE_SUMMARY
+Explain this more,MORE_DETAIL
+Please explain this further,MORE_DETAIL
+Describe what is around me,SCENE_SUMMARY
+Give me a short overview of the scene,SCENE_DESCRIPTION
+Please identify the object,OBJECT_IDENTIFICATION
+Tell me if anything is getting closer,DETECT_APPROACHING
+Give me a quick description of the scene,SCENE_DESCRIPTION
+Is there anything preventing forward movement?,OBSTACLE_CHECK
+Can you provide additional information?,MORE_DETAIL
+What does this message say?,READ_TEXT
+Tell me what is ahead of me,FRONT_OBJECTS
+Can you read this message?,READ_TEXT
+Can you tell me what this thing is?,OBJECT_IDENTIFICATION
+Read this sign,READ_TEXT
+Tell me what is in the area,SCENE_SUMMARY
+Give me a quick description of the environment,SCENE_DESCRIPTION
+What does this writing say?,READ_TEXT
+Are there any obstructions?,OBSTACLE_CHECK
+What can you identify nearby?,SCENE_SUMMARY
+Can you detect something approaching?,DETECT_APPROACHING
+What is written here?,READ_TEXT
+What is in the surrounding area?,SCENE_SUMMARY
+Where is the entrance door?,LOCATE_OBJECT
+Can you read this sign for me?,READ_TEXT
+Can you explain in more detail?,MORE_DETAIL
+Can you tell if someone is approaching me?,DETECT_APPROACHING
+Identify what I am seeing,OBJECT_IDENTIFICATION
+Can you check for approaching objects?,DETECT_APPROACHING
+Is there a blockage ahead?,OBSTACLE_CHECK
+I would like more details,MORE_DETAIL
+Where can I find the exit?,LOCATE_OBJECT
+Please say that one more time,REPEAT_RESPONSE
+Can you look ahead?,FRONT_OBJECTS
+Can you give a short description?,SCENE_DESCRIPTION
+Where is it located?,LOCATE_OBJECT
+Repeat the message,REPEAT_RESPONSE
+Repeat the previous answer,REPEAT_RESPONSE
+Can you recognize what is shown?,OBJECT_IDENTIFICATION
+Can you recognize the item?,OBJECT_IDENTIFICATION
+Give me a brief description,SCENE_DESCRIPTION
+Please give additional details,MORE_DETAIL
+"I didn't hear you, repeat",REPEAT_RESPONSE
+I couldn't hear that,REPEAT_RESPONSE
+What is in the environment around me?,SCENE_SUMMARY
+Can you expand on that?,MORE_DETAIL
+What object is in front of me?,OBJECT_IDENTIFICATION
+Tell me the door's position,LOCATE_OBJECT
+Is anything blocking my route?,OBSTACLE_CHECK
+What is this in the image?,OBJECT_IDENTIFICATION
+Tell me the direction of the door,LOCATE_OBJECT
+Is a person getting closer?,DETECT_APPROACHING
+Can you tell me where it is?,LOCATE_OBJECT
+Give me a brief scene summary,SCENE_DESCRIPTION
+Is there something moving toward me?,DETECT_APPROACHING
+Can you see an obstacle in front?,OBSTACLE_CHECK
+Give me more details,MORE_DETAIL
+Tell me briefly what the scene contains,SCENE_DESCRIPTION
+Where can I find the door?,LOCATE_OBJECT
+I missed your answer,REPEAT_RESPONSE
+Summarize the scene,SCENE_DESCRIPTION
+What objects are in my forward view?,FRONT_OBJECTS
+What does this sign say?,READ_TEXT
+Describe the scene,SCENE_DESCRIPTION
+What else do you know?,MORE_DETAIL
+What is directly before me?,FRONT_OBJECTS
+Check the path in front of me,OBSTACLE_CHECK
+Can you see anything obstructing the way?,OBSTACLE_CHECK
+Can you describe what is ahead?,FRONT_OBJECTS
+Tell me what objects are around,SCENE_SUMMARY
+Can you find the door?,LOCATE_OBJECT
+Is the area ahead clear?,OBSTACLE_CHECK
+Could you explain further?,MORE_DETAIL
+Tell me the location,LOCATE_OBJECT
+Repeat your previous response,REPEAT_RESPONSE
+Briefly tell me about my surroundings,SCENE_DESCRIPTION
+Tell me about my surroundings,SCENE_SUMMARY
+Say it again,REPEAT_RESPONSE
+What does my surroundings look like?,SCENE_SUMMARY
+Can you identify this object?,OBJECT_IDENTIFICATION
+What does the poster say?,READ_TEXT
+Is a person approaching?,DETECT_APPROACHING
+Describe the area briefly,SCENE_DESCRIPTION
+Give me a quick overview,SCENE_DESCRIPTION
+Tell me briefly about the scene,SCENE_DESCRIPTION
+Tell me what is written here,READ_TEXT
+Read everything written here,READ_TEXT
+Is anything directly in my path?,OBSTACLE_CHECK
+Where is the door?,LOCATE_OBJECT
+Briefly summarize the scene,SCENE_DESCRIPTION
+Can you repeat what I missed?,REPEAT_RESPONSE
+What is this object called?,OBJECT_IDENTIFICATION
+Tell me what I have ahead,FRONT_OBJECTS
+What do you see in front?,FRONT_OBJECTS
+Can you summarize the environment?,SCENE_DESCRIPTION
+Give me further details,MORE_DETAIL
+Briefly explain what you see,SCENE_DESCRIPTION
+Is there anything moving closer?,DETECT_APPROACHING
+Tell me what object I am seeing,OBJECT_IDENTIFICATION
+Is a person coming closer?,DETECT_APPROACHING
+Where is the object?,LOCATE_OBJECT
+Tell me what is directly ahead of me,FRONT_OBJECTS
+Can you repeat the answer?,REPEAT_RESPONSE
+What is in my direct view?,FRONT_OBJECTS
+Can you give more details?,MORE_DETAIL
+Tell me its position,LOCATE_OBJECT
+Can you read the printed text?,READ_TEXT
+Please read the writing,READ_TEXT
+Are there any obstacles in front?,OBSTACLE_CHECK
+What can you identify directly ahead?,FRONT_OBJECTS
+Where is the car?,LOCATE_OBJECT
+Tell me where I can find it,LOCATE_OBJECT
+Can you check the way ahead?,OBSTACLE_CHECK
+Can you read the board?,READ_TEXT
+Tell me whether the path is clear,OBSTACLE_CHECK
+I didn't catch that,REPEAT_RESPONSE
+What is ahead in my direction?,FRONT_OBJECTS
+Can you detect an obstacle ahead?,OBSTACLE_CHECK
+Could you say the answer again?,REPEAT_RESPONSE
+Tell me what the area looks like,SCENE_DESCRIPTION
+Give me additional details,MORE_DETAIL
+What is its location?,LOCATE_OBJECT
+Tell me some more,MORE_DETAIL
+Give me a few words about the scene,SCENE_DESCRIPTION
+Can you elaborate?,MORE_DETAIL
+Can you summarize the surroundings?,SCENE_DESCRIPTION
+Is there something blocking my path?,OBSTACLE_CHECK
+Can you provide further details?,MORE_DETAIL
+Tell me the object name,OBJECT_IDENTIFICATION
+Read the label,READ_TEXT
+Repeat the previous response,REPEAT_RESPONSE
+Can I proceed forward?,OBSTACLE_CHECK
+What object is that?,OBJECT_IDENTIFICATION
+Tell me what is in my path,FRONT_OBJECTS
+Read this text,READ_TEXT
+Say that one more time,REPEAT_RESPONSE
+Is anyone coming toward me right now,DETECT_APPROACHING
+What does the sign say?,READ_TEXT
+Give me a brief overview of what is visible,SCENE_DESCRIPTION
+Is anyone approaching from my side?,DETECT_APPROACHING
+Do you see any obstacles?,OBSTACLE_CHECK
+Repeat that for me,REPEAT_RESPONSE
+Is there someone approaching?,DETECT_APPROACHING
+Can you read the words?,READ_TEXT
+Can you tell me the words here?,READ_TEXT
+Is anything blocking my path?,OBSTACLE_CHECK
+Is anything in my way?,OBSTACLE_CHECK
+Can you tell me where that object is?,LOCATE_OBJECT
+I want some more details,MORE_DETAIL
+Repeat your answer,REPEAT_RESPONSE
+What is that?,OBJECT_IDENTIFICATION
+Can you tell if anything is getting closer?,DETECT_APPROACHING
+What am I seeing in the image?,OBJECT_IDENTIFICATION
+Can you give me additional details?,MORE_DETAIL
+Please explain further,MORE_DETAIL
+Tell me more,MORE_DETAIL
+Tell me again,REPEAT_RESPONSE
+Say the information again,REPEAT_RESPONSE
+Give me a quick summary of the scene,SCENE_DESCRIPTION
+What does my environment look like?,SCENE_DESCRIPTION
+What do you see ahead?,FRONT_OBJECTS
+Can you recognize the text?,READ_TEXT
+Do you see a door?,LOCATE_OBJECT
+What object am I looking at?,OBJECT_IDENTIFICATION
+Tell me everything you can see around me,SCENE_SUMMARY
+Can you summarize what you see?,SCENE_DESCRIPTION
+Where is the entrance?,LOCATE_OBJECT
+Repeat that information,REPEAT_RESPONSE
+Could you repeat your last response?,REPEAT_RESPONSE
+Tell me more about it,MORE_DETAIL
+What is directly in my view?,FRONT_OBJECTS
+Give me a brief overview of the scene,SCENE_DESCRIPTION
+Read the board,READ_TEXT
+Tell me the main things in the scene,SCENE_DESCRIPTION
+Please identify this,OBJECT_IDENTIFICATION
+What does the scene look like?,SCENE_DESCRIPTION
+Can you say your answer again?,REPEAT_RESPONSE
+Can you identify its location?,LOCATE_OBJECT
+Can you check the path ahead?,OBSTACLE_CHECK
+Is anything blocking the path ahead?,OBSTACLE_CHECK
+Can you repeat what you said?,REPEAT_RESPONSE
+Can you find that thing?,LOCATE_OBJECT
+What is in my surroundings?,SCENE_SUMMARY
+Tell me the answer again,REPEAT_RESPONSE
+Please say that again,REPEAT_RESPONSE
+Give me a short scene description,SCENE_DESCRIPTION
+What is in the area ahead?,FRONT_OBJECTS
+Can you give me a concise overview?,SCENE_DESCRIPTION
+Check whether the path is clear,OBSTACLE_CHECK
+Tell me what is shown here,OBJECT_IDENTIFICATION
+What is in the area surrounding me?,SCENE_SUMMARY
+Give me an idea of what is around,SCENE_SUMMARY
+Where can I see it?,LOCATE_OBJECT
+Can you describe what is in front?,FRONT_OBJECTS
+Can you see anything around me?,SCENE_SUMMARY
+Tell me that again please,REPEAT_RESPONSE
+Tell me what this says,READ_TEXT
+Tell me the name of this object,OBJECT_IDENTIFICATION
+Is my path clear?,OBSTACLE_CHECK
+Can you extract the text?,READ_TEXT
+Are there objects blocking my path?,OBSTACLE_CHECK
+Tell me if there is an obstacle,OBSTACLE_CHECK
+Tell me the main contents of the scene,SCENE_DESCRIPTION
+Can you identify what I see?,OBJECT_IDENTIFICATION
+What can you see in my forward direction?,FRONT_OBJECTS
+What can be seen around me?,SCENE_SUMMARY
+Can you identify this?,OBJECT_IDENTIFICATION
+Repeat the last response,REPEAT_RESPONSE
+Tell me what is in my front view,FRONT_OBJECTS
+Can you explain what you mean?,MORE_DETAIL
+Identify what is visible,OBJECT_IDENTIFICATION
+What objects are visible around me?,SCENE_SUMMARY
+What is all around me?,SCENE_SUMMARY
+Which direction is the door?,LOCATE_OBJECT
+What do you see nearby?,SCENE_SUMMARY
+Can you tell me what I am seeing?,OBJECT_IDENTIFICATION
+Can you check for obstacles?,OBSTACLE_CHECK
+Can you find that object?,LOCATE_OBJECT
+Where is the thing?,LOCATE_OBJECT
+What is visible nearby?,SCENE_SUMMARY
+Is there a person coming toward me?,DETECT_APPROACHING
+Can you recognize what is written?,READ_TEXT
+What is written on this notice?,READ_TEXT
+What am I looking at right now?,OBJECT_IDENTIFICATION
+Can you recognize this?,OBJECT_IDENTIFICATION
+Give me a little more detail,MORE_DETAIL
+What is written on the label?,READ_TEXT
+Can you point out where it is?,LOCATE_OBJECT
+Find the door,LOCATE_OBJECT
+Describe what is visible around me,SCENE_DESCRIPTION
+Is anything obstructing the path?,OBSTACLE_CHECK
+What is the object in front of me?,OBJECT_IDENTIFICATION
+Tell me what is in front,FRONT_OBJECTS
+Describe this scene briefly,SCENE_DESCRIPTION
+Do you detect anything blocking the path?,OBSTACLE_CHECK
+Tell me what is around me,SCENE_SUMMARY
+Can you provide more information?,MORE_DETAIL
+Describe the environment around me,SCENE_DESCRIPTION
+Can you see anything in front of me?,FRONT_OBJECTS
+What side is the object on?,LOCATE_OBJECT
+Can you describe what is around me?,SCENE_SUMMARY
+What is the object?,OBJECT_IDENTIFICATION
+Are there obstacles directly ahead?,OBSTACLE_CHECK
+Tell me what this is,OBJECT_IDENTIFICATION
+Is anyone getting closer to me?,DETECT_APPROACHING
+What is located in front of me?,FRONT_OBJECTS
+Can you check whether someone is approaching?,DETECT_APPROACHING
+Tell me what is in the scene briefly,SCENE_DESCRIPTION
+Is someone coming toward my position?,DETECT_APPROACHING
+What is written on the sign?,READ_TEXT
+Give me a summary of my surroundings,SCENE_SUMMARY
+Is there something coming toward me?,DETECT_APPROACHING
+Repeat that,REPEAT_RESPONSE
+Can you check what is blocking my way?,OBSTACLE_CHECK
+Read the information,READ_TEXT
+Where exactly is the door?,LOCATE_OBJECT
+Tell me more about the result,MORE_DETAIL
+Say the last part again,REPEAT_RESPONSE
+Can you recognize the thing?,OBJECT_IDENTIFICATION
+Tell me more about this object,MORE_DETAIL
+Can you identify what is shown?,OBJECT_IDENTIFICATION
+Please tell me what this says,READ_TEXT
+Can you give me a scene summary?,SCENE_DESCRIPTION
+Can you provide a short description?,SCENE_DESCRIPTION
+What else can you tell me?,MORE_DETAIL
+Where can I find that object?,LOCATE_OBJECT
+Can you tell me more?,MORE_DETAIL
+What object am I seeing?,OBJECT_IDENTIFICATION
+Tell me more about that,MORE_DETAIL
+What is this thing called?,OBJECT_IDENTIFICATION
+Describe everything around me,SCENE_SUMMARY
+Can you recognize this object?,OBJECT_IDENTIFICATION
+Briefly tell me what you see,SCENE_DESCRIPTION
+Tell me the words on the sign,READ_TEXT
+What can you identify around me?,SCENE_SUMMARY
+Is someone walking towards me?,DETECT_APPROACHING
+What is in front of the camera?,OBJECT_IDENTIFICATION
+Where is that door?,LOCATE_OBJECT
+Can you read the paper?,READ_TEXT
+Which direction is it?,LOCATE_OBJECT
+Check if there is an obstacle,OBSTACLE_CHECK
+Can I safely move ahead?,OBSTACLE_CHECK
+What item is this?,OBJECT_IDENTIFICATION
+Can you detect movement toward me?,DETECT_APPROACHING
+Tell me if someone is approaching,DETECT_APPROACHING
+Repeat the response again,REPEAT_RESPONSE
+What can I see directly ahead?,FRONT_OBJECTS
+Say your previous answer again,REPEAT_RESPONSE
+What can you identify in front?,FRONT_OBJECTS
+Is someone approaching from ahead,DETECT_APPROACHING
+What objects are directly ahead?,FRONT_OBJECTS
+Can you tell me what this object is?,OBJECT_IDENTIFICATION
+Is someone approaching from the left?,DETECT_APPROACHING
+Where can that object be found?,LOCATE_OBJECT
+What is that object?,OBJECT_IDENTIFICATION
+What objects are in front?,FRONT_OBJECTS
+"I didn't understand, repeat",REPEAT_RESPONSE
+Give me a quick overview of what is around,SCENE_SUMMARY
+Explain this in more detail,MORE_DETAIL
+Give me an overview of what you see,SCENE_SUMMARY
+What is visible ahead?,FRONT_OBJECTS
+Tell me the label text,READ_TEXT
+Can you identify obstacles ahead?,OBSTACLE_CHECK
+Can you see objects ahead?,FRONT_OBJECTS
+How many people are there?,COUNT_OBJECT
+How many persons can you see?,COUNT_OBJECT
+How many people do you see?,COUNT_OBJECT
+Can you count the people?,COUNT_OBJECT
+Count the people around me.,COUNT_OBJECT
+How many chairs are there?,COUNT_OBJECT
+How many chairs can you see?,COUNT_OBJECT
+Can you count the chairs?,COUNT_OBJECT
+Count the chairs in the room.,COUNT_OBJECT
+How many tables are there?,COUNT_OBJECT
+How many tables can you see?,COUNT_OBJECT
+Can you count the tables?,COUNT_OBJECT
+Count the tables around me.,COUNT_OBJECT
+How many cars are there?,COUNT_OBJECT
+How many cars can you see?,COUNT_OBJECT
+Can you count the cars?,COUNT_OBJECT
+Count the cars around me.,COUNT_OBJECT
+How many bottles are there?,COUNT_OBJECT
+How many bottles can you see?,COUNT_OBJECT
+Can you count the bottles?,COUNT_OBJECT
+Count the bottles around me.,COUNT_OBJECT
+How many backpacks are there?,COUNT_OBJECT
+How many backpacks can you see?,COUNT_OBJECT
+Can you count the backpacks?,COUNT_OBJECT
+Count the backpacks around me.,COUNT_OBJECT
+How many objects are there?,COUNT_OBJECT
+How many objects can you see?,COUNT_OBJECT
+Can you count the objects?,COUNT_OBJECT
+Count all the objects.,COUNT_OBJECT
+What is the number of people?,COUNT_OBJECT
+What is the number of chairs?,COUNT_OBJECT
+What is the number of tables?,COUNT_OBJECT
+What is the number of cars?,COUNT_OBJECT
+What is the number of bottles?,COUNT_OBJECT
+What is the number of backpacks?,COUNT_OBJECT
+Tell me the number of people.,COUNT_OBJECT
+Tell me the number of chairs.,COUNT_OBJECT
+Tell me the number of tables.,COUNT_OBJECT
+Tell me the number of cars.,COUNT_OBJECT
+Tell me the number of bottles.,COUNT_OBJECT
+Tell me the number of backpacks.,COUNT_OBJECT
+How many people are visible?,COUNT_OBJECT
+How many chairs are visible?,COUNT_OBJECT
+How many tables are visible?,COUNT_OBJECT
+How many cars are visible?,COUNT_OBJECT
+How many bottles are visible?,COUNT_OBJECT
+How many backpacks are visible?,COUNT_OBJECT
+How many people do you detect?,COUNT_OBJECT
+How many chairs do you detect?,COUNT_OBJECT
+How many tables do you detect?,COUNT_OBJECT
+How many cars do you detect?,COUNT_OBJECT
+How many bottles do you detect?,COUNT_OBJECT
+How many backpacks do you detect?,COUNT_OBJECT
+Can you tell me how many people there are?,COUNT_OBJECT
+Can you tell me how many chairs there are?,COUNT_OBJECT
+Can you tell me how many tables there are?,COUNT_OBJECT
+Can you tell me how many cars there are?,COUNT_OBJECT
+Can you tell me how many bottles there are?,COUNT_OBJECT
+Can you tell me how many backpacks there are?,COUNT_OBJECT
+Please count the people.,COUNT_OBJECT
+Please count the chairs.,COUNT_OBJECT
+Please count the tables.,COUNT_OBJECT
+Please count the cars.,COUNT_OBJECT
+Please count the bottles.,COUNT_OBJECT
+Please count the backpacks.,COUNT_OBJECT
+I want to know how many people are there.,COUNT_OBJECT
+I want to know how many chairs are there.,COUNT_OBJECT
+I want to know how many tables are there.,COUNT_OBJECT
+I want to know how many cars are there.,COUNT_OBJECT
+I want to know how many bottles are there.,COUNT_OBJECT
+I want to know how many backpacks are there.,COUNT_OBJECT
+How many people can you identify?,COUNT_OBJECT
+How many chairs can you identify?,COUNT_OBJECT
+How many tables can you identify?,COUNT_OBJECT
+How many objects can you find?,COUNT_OBJECT
