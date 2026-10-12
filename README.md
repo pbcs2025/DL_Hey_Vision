@@ -39,8 +39,26 @@ An intelligent, hands-free spatial perception assistant designed to aid visually
 
 ## Running the Application
 
+### Option 1: Desktop 1-Click Launcher (Windows)
+Double-click `run_app.bat` (or the desktop shortcut `AI Vision Assistant.bat`). This will:
+1. Start the FastAPI server on `0.0.0.0:8000` (accessible from both desktop and phone).
+2. Display your computer's local Wi-Fi IP address.
+3. Automatically launch the application in an app window.
+
+### Option 2: Manual Terminal Launch
 ```bash
-# Start the FastAPI Backend & Cyber-Aura HUD Server
-python -m uvicorn ui.backend.app_server:app --host 127.0.0.1 --port 8000
+# Start on 0.0.0.0 to enable both PC and mobile phone access
+python -m uvicorn ui.backend.app_server:app --host 0.0.0.0 --port 8000
 ```
-Open `http://localhost:8000` in your browser.
+- **On this computer:** Open [http://localhost:8000](http://localhost:8000)
+- **On your mobile phone (same Wi-Fi):** Open `http://<YOUR_LOCAL_IP>:8000` (e.g. `http://192.168.1.104:8000`)
+
+---
+
+## Mobile App & PWA Features
+
+The application includes full **Progressive Web App (PWA)** support for mobile devices:
+1. **Home Screen Installation:** Open the link in mobile Chrome or Safari and tap **"Install App"** / **"Add to Home Screen"** to install it as a standalone mobile application.
+2. **Spoken Voice Output:** Integrates browser Speech Synthesis (`window.speechSynthesis`) so assistant answers and hazard alerts are automatically read aloud to visually impaired users.
+3. **Mobile Test Lab:** Upload pictures directly from your mobile camera for real-time spatial analysis, obstacle risk scoring, and DQN navigation guidance.
+
