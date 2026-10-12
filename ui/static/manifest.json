@@ -1,0 +1,16 @@
+{
+  "name": "AI Vision Assistant",
+  "short_name": "VisionAssistant",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0e17",
+  "theme_color": "#00f0ff",
+  "description": "Real-Time Assistive Vision & Voice System for Visually Impaired Navigation",
+  "icons": [
+    {
+      "src": "/static/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

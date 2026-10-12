@@ -54,8 +54,8 @@ tf.random.set_seed(SEED)
 # Paths
 # -----------------------------
 
-MODEL_DIR = "/kaggle/working/AI_Vision_Assistant/models/dqn"
-EXPERIMENT_DIR = "/kaggle/working/AI_Vision_Assistant/experiments/dqn"
+MODEL_DIR = "models/dqn"
+EXPERIMENT_DIR = "experiments/dqn"
 
 os.makedirs(MODEL_DIR, exist_ok=True)
 os.makedirs(EXPERIMENT_DIR, exist_ok=True)
@@ -197,6 +197,7 @@ epsilon = EPSILON_START
 episode_rewards = []
 
 
+@tf.function
 def train_step(
     states,
     actions,

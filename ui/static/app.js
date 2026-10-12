@@ -257,6 +257,19 @@
   // --- Assistant Spoken & Text Responses ---
   let lastSpokenText = '';
 
+  function speakAloud(text) {
+    if (!text || !('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.05;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.warn('SpeechSynthesis error:', e);
+    }
+  }
+
   function displayAssistantResponse(data) {
     playEarcon('answer');
     const text = data.response || 'Ready.';
@@ -274,17 +287,16 @@
       if (responseLatency) responseLatency.textContent = `Latency: ${(data.time_to_answer_ms || 0).toFixed(0)} ms`;
       if (responseIntent && data.result) responseIntent.textContent = `Intent: ${data.result.intent || 'QUERY'}`;
     }
+
+    // Automatically speak the assistive answer aloud for visually impaired assistance
+    speakAloud(text);
+
     setOrbState('STANDBY');
   }
 
   function replayLastSpeech() {
     if (!lastSpokenText) return;
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(lastSpokenText);
-      utterance.rate = 1.05;
-      window.speechSynthesis.speak(utterance);
-    }
+    speakAloud(lastSpokenText);
   }
 
   if (replayBtn) replayBtn.addEventListener('click', replayLastSpeech);
@@ -401,6 +413,9 @@
       displayAssistantResponse(msg);
     } else if (msg.type === 'dqn_decision') {
       renderDqnDecision(msg.decision);
+      if (msg.decision && msg.decision.spoke_alert && msg.decision.phrase) {
+        speakAloud(msg.decision.phrase);
+      }
     }
   }
 

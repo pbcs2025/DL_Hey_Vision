@@ -37,4 +37,5 @@ Thumbs.db
 *.loggit 
 
 # Local backups
-backup/
+backup/*
+!backup/**/*.json

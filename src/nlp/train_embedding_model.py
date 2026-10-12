@@ -49,8 +49,8 @@ for index, intent in id_to_intent.items():
 # 3. Prepare text and labels
 # --------------------------------------------------
 
-texts = df["text"].values
-labels = df["label"].values
+texts = np.array(df["text"].tolist(), dtype=object)
+labels = np.array(df["label"].tolist(), dtype=int)
 
 
 # --------------------------------------------------
