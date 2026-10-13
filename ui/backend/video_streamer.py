@@ -169,31 +169,31 @@ class CameraStreamer:
         """Generates an aesthetic obsidian standby frame when no physical webcam is attached."""
         h, w = 480, 640
         frame = np.zeros((h, w, 3), dtype=np.uint8)
-        # Deep obsidian gradient background
-        frame[:] = (20, 14, 10) # BGR obsidian
+        # Deep slate background (#1E2740 in BGR)
+        frame[:] = (64, 39, 30)
 
-        # Subtle HUD Reticle brackets
+        # Subtle corner brackets
         margin = 40
         bracket_len = 35
-        color_cyan = (255, 240, 0)
+        color_amber = (75, 184, 242)
         # Top-left
-        cv2.line(frame, (margin, margin), (margin + bracket_len, margin), color_cyan, 2)
-        cv2.line(frame, (margin, margin), (margin, margin + bracket_len), color_cyan, 2)
+        cv2.line(frame, (margin, margin), (margin + bracket_len, margin), color_amber, 2)
+        cv2.line(frame, (margin, margin), (margin, margin + bracket_len), color_amber, 2)
         # Top-right
-        cv2.line(frame, (w - margin, margin), (w - margin - bracket_len, margin), color_cyan, 2)
-        cv2.line(frame, (w - margin, margin), (w - margin, margin + bracket_len), color_cyan, 2)
+        cv2.line(frame, (w - margin, margin), (w - margin - bracket_len, margin), color_amber, 2)
+        cv2.line(frame, (w - margin, margin), (w - margin, margin + bracket_len), color_amber, 2)
         # Bottom-left
-        cv2.line(frame, (margin, h - margin), (margin + bracket_len, h - margin), color_cyan, 2)
-        cv2.line(frame, (margin, h - margin), (margin, h - margin - bracket_len), color_cyan, 2)
+        cv2.line(frame, (margin, h - margin), (margin + bracket_len, h - margin), color_amber, 2)
+        cv2.line(frame, (margin, h - margin), (margin, h - margin - bracket_len), color_amber, 2)
         # Bottom-right
-        cv2.line(frame, (w - margin, h - margin), (w - margin - bracket_len, h - margin), color_cyan, 2)
-        cv2.line(frame, (w - margin, h - margin), (w - margin, h - margin - bracket_len), color_cyan, 2)
+        cv2.line(frame, (w - margin, h - margin), (w - margin - bracket_len, h - margin), color_amber, 2)
+        cv2.line(frame, (w - margin, h - margin), (w - margin, h - margin - bracket_len), color_amber, 2)
 
         # Center Status Warning
-        cv2.putText(frame, "NO WEBCAM SIGNAL", (w // 2 - 130, h // 2 - 20),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 180, 255), 2, cv2.LINE_AA)
-        cv2.putText(frame, "TEST LAB & UPLOAD MODE ACTIVE", (w // 2 - 170, h // 2 + 20),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.55, (200, 200, 200), 1, cv2.LINE_AA)
+        cv2.putText(frame, "No Camera Signal", (w // 2 - 110, h // 2 - 20),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.75, (75, 184, 242), 2, cv2.LINE_AA)
+        cv2.putText(frame, "Test Lab & Upload Mode Active", (w // 2 - 165, h // 2 + 20),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.60, (231, 241, 246), 1, cv2.LINE_AA)
         return frame
 
     def get_raw_frame(self) -> Optional[np.ndarray]:

@@ -115,6 +115,31 @@ class TTSWorker:
         # Enqueue high-priority warning
         self._queue.put((1, time.time(), str(warning_text).strip(), on_done))
 
+    def stop_query_speech(self):
+        """
+        Immediately interrupt lower-priority speech (priority >= 2),
+        clear pending query answers and proactive speech from the queue,
+        while preserving urgent safety warnings (priority <= 1).
+        """
+        kept_items = []
+        while not self._queue.empty():
+            try:
+                item = self._queue.get_nowait()
+                if item[0] <= 1:
+                    kept_items.append(item)
+            except queue.Empty:
+                break
+
+        for item in kept_items:
+            self._queue.put(item)
+
+        with self._engine_lock:
+            if self._current_engine and self._is_speaking:
+                try:
+                    self._current_engine.stop()
+                except Exception as e:
+                    print(f"[TTSWorker] Exception on stop_query_speech: {e}")
+
     def is_speaking(self) -> bool:
         """Returns True if the assistant is actively outputting voice."""
         return self._is_speaking

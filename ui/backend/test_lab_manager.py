@@ -224,13 +224,13 @@ class TestLabManager:
                 bh = int(det.get("height", 50) * h)
                 x1, y1, x2, y2 = xc - bw // 2, yc - bh // 2, xc + bw // 2, yc + bh // 2
 
-            # Vibrant cyan / green bounding box
-            color = (255, 200, 0) if "DOOR" in obj_name else (0, 255, 128)
+            # Theme-aligned bounding box (warm amber for door, safe green for other objects)
+            color = (75, 184, 242) if "DOOR" in obj_name else (137, 211, 123)
             cv2.rectangle(annotated, (x1, y1), (x2, y2), color, 2)
 
             label = f"{obj_name} {conf:.2f} ({pos}, {prox})"
             (tw, th), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
-            cv2.rectangle(annotated, (x1, max(0, y1 - 20)), (x1 + tw + 6, max(20, y1)), (15, 15, 20), -1)
+            cv2.rectangle(annotated, (x1, max(0, y1 - 20)), (x1 + tw + 6, max(20, y1)), (64, 39, 30), -1)
             cv2.putText(annotated, label, (x1 + 3, max(15, y1 - 4)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA)
 
         annotated_path = os.path.join(SCRATCH_DIR, "test_lab_annotated.jpg")
@@ -305,11 +305,14 @@ class TestLabManager:
                 self.analysis_job["elapsed_sec"] = round(time.time() - self.analysis_job["start_time"], 1)
             return dict(self.analysis_job)
 
-    def execute_query(self, query: str) -> Dict[str, Any]:
+    def execute_query(self, query: str, speak: bool = True) -> Dict[str, Any]:
         """
         Executes assistant query on the currently loaded Test Lab media.
         Supports voice, typed queries, and chips.
         """
+        if self.tts_worker:
+            self.tts_worker.stop_query_speech()
+
         with self.lock:
             media = dict(self.active_media)
 
@@ -339,7 +342,7 @@ class TestLabManager:
 
         # Speak answer using priority 5 (user response)
         response_text = result.get("response", "")
-        if response_text:
+        if response_text and speak and self.tts_worker:
             self.tts_worker.speak(response_text, priority=5)
 
         result["total_elapsed_ms"] = total_time_ms

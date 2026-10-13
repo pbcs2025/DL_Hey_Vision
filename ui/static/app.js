@@ -125,6 +125,54 @@
   const queryInput = document.getElementById('queryInput');
   const promptChips = document.querySelectorAll('.prompt-chip');
 
+  // Read answers aloud switches & TTS notes
+  const readAloudToggle = document.getElementById('readAloudToggle');
+  const testLabReadAloudToggle = document.getElementById('testLabReadAloudToggle');
+  const ttsNoteWalk = document.getElementById('ttsNoteWalk');
+  const ttsNoteTestLab = document.getElementById('ttsNoteTestLab');
+  const STORAGE_KEY_READ_ALOUD = 'ai_vision_read_aloud';
+
+  function isReadAloudEnabled() {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_READ_ALOUD);
+      return stored !== 'false';
+    } catch (e) {
+      return true;
+    }
+  }
+
+  function setReadAloudEnabled(enabled) {
+    try {
+      localStorage.setItem(STORAGE_KEY_READ_ALOUD, enabled ? 'true' : 'false');
+    } catch (e) {}
+    if (readAloudToggle) readAloudToggle.checked = enabled;
+    if (testLabReadAloudToggle) testLabReadAloudToggle.checked = enabled;
+  }
+
+  const initialReadAloud = isReadAloudEnabled();
+  if (readAloudToggle) {
+    readAloudToggle.checked = initialReadAloud;
+    readAloudToggle.addEventListener('change', () => setReadAloudEnabled(readAloudToggle.checked));
+  }
+  if (testLabReadAloudToggle) {
+    testLabReadAloudToggle.checked = initialReadAloud;
+    testLabReadAloudToggle.addEventListener('change', () => setReadAloudEnabled(testLabReadAloudToggle.checked));
+  }
+
+  async function checkTtsAvailability() {
+    try {
+      const res = await fetch('/api/tts/status');
+      const data = await res.json();
+      const available = data && data.available;
+      if (ttsNoteWalk) ttsNoteWalk.classList.toggle('hidden', available);
+      if (ttsNoteTestLab) ttsNoteTestLab.classList.toggle('hidden', available);
+    } catch (err) {
+      if (ttsNoteWalk) ttsNoteWalk.classList.remove('hidden');
+      if (ttsNoteTestLab) ttsNoteTestLab.classList.remove('hidden');
+    }
+  }
+  checkTtsAvailability();
+
   // Mode Tabs & View Containers
   const tabWalk = document.getElementById('tabWalk');
   const tabTestLab = document.getElementById('tabTestLab');
@@ -225,6 +273,7 @@
   });
 
   function triggerSpacebarAction() {
+    fetch('/api/tts/stop', { method: 'POST' }).catch(() => {});
     playEarcon('listen');
     setOrbState('LISTENING');
     heardText.textContent = 'Spacebar pressed: Listening for query...';
@@ -274,16 +323,44 @@
       if (responseLatency) responseLatency.textContent = `Latency: ${(data.time_to_answer_ms || 0).toFixed(0)} ms`;
       if (responseIntent && data.result) responseIntent.textContent = `Intent: ${data.result.intent || 'QUERY'}`;
     }
-    setOrbState('STANDBY');
+
+    if (isReadAloudEnabled()) {
+      setOrbState('SPEAKING');
+    } else {
+      setOrbState('STANDBY');
+    }
   }
 
-  function replayLastSpeech() {
+  async function replayLastSpeech() {
     if (!lastSpokenText) return;
+    try {
+      setOrbState('SPEAKING');
+      const res = await fetch('/api/tts/speak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: lastSpokenText })
+      });
+      const data = await res.json();
+      if (data && data.status === 'success') {
+        if (ttsNoteWalk) ttsNoteWalk.classList.add('hidden');
+        if (ttsNoteTestLab) ttsNoteTestLab.classList.add('hidden');
+        return;
+      }
+    } catch (err) {
+      console.warn('Backend TTS replay request error:', err);
+    }
+
+    // Fallback to Web Speech API
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(lastSpokenText);
       utterance.rate = 1.05;
+      utterance.onend = () => setOrbState('STANDBY');
       window.speechSynthesis.speak(utterance);
+    } else {
+      if (ttsNoteWalk) ttsNoteWalk.classList.remove('hidden');
+      if (ttsNoteTestLab) ttsNoteTestLab.classList.remove('hidden');
+      setOrbState('STANDBY');
     }
   }
 
@@ -310,6 +387,9 @@
   });
 
   async function sendQuery(query) {
+    // Starting a new query stops any answer still being spoken
+    fetch('/api/tts/stop', { method: 'POST' }).catch(() => {});
+
     setOrbState('ANALYZING');
     playEarcon('thinking');
     heardText.textContent = `Processing query: "${query}"`;
@@ -318,7 +398,7 @@
       const res = await fetch('/api/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: query })
+        body: JSON.stringify({ query: query, read_aloud: isReadAloudEnabled() })
       });
       const data = await res.json();
       if (data.status === 'success') {
@@ -511,6 +591,8 @@
   const mediaFileInput = document.getElementById('mediaFileInput');
   const browseBtn = document.getElementById('browseBtn');
 
+  const testEmptyPlaceholder = document.getElementById('testEmptyPlaceholder');
+  const movementMutedNotice = document.getElementById('movementMutedNotice');
   const testImageWrapper = document.getElementById('testImageWrapper');
   const testVideoWrapper = document.getElementById('testVideoWrapper');
   const testLabImage = document.getElementById('testLabImage');
@@ -555,6 +637,7 @@
 
       sampleButtons.forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
+      if (testLabVideo) testLabVideo.pause();
 
       try {
         const res = await fetch('/api/test_lab/select_sample', {
@@ -613,6 +696,7 @@
   // Upload File Handler
   async function handleUploadFile(file) {
     if (!file) return;
+    if (testLabVideo) testLabVideo.pause();
 
     // Client-side size validation (max 50MB)
     const maxSize = 50 * 1024 * 1024;
@@ -659,15 +743,37 @@
 
   // Render Test Lab Media Viewport
   function renderTestLabMedia(media) {
+    if (!media || (!media.type && !media.path)) {
+      if (testEmptyPlaceholder) testEmptyPlaceholder.classList.remove('hidden');
+      if (testImageWrapper) testImageWrapper.classList.add('hidden');
+      if (testVideoWrapper) testVideoWrapper.classList.add('hidden');
+      if (movementAnalysisCard) movementAnalysisCard.classList.add('hidden');
+      if (movementMutedNotice) movementMutedNotice.classList.add('hidden');
+      if (streamVideoBtn) streamVideoBtn.classList.add('hidden');
+      if (testLabVideo) {
+        testLabVideo.pause();
+        testLabVideo.removeAttribute('src');
+        testLabVideo.load();
+      }
+      if (testLabImage) testLabImage.removeAttribute('src');
+      if (activeMediaBadge) activeMediaBadge.textContent = 'No media loaded';
+      if (viewportMediaTitle) viewportMediaTitle.textContent = 'Media detection viewport';
+      if (viewportMediaSub) viewportMediaSub.textContent = 'Select a sample asset or upload media';
+      if (mediaDetectionsSummary) mediaDetectionsSummary.innerHTML = '';
+      return;
+    }
+
+    if (testEmptyPlaceholder) testEmptyPlaceholder.classList.add('hidden');
+
     const isVideo = media.type === 'video';
     const filename = media.name || 'media';
 
     if (activeMediaBadge) {
-      activeMediaBadge.textContent = `${filename} (${media.type.toUpperCase()})`;
+      activeMediaBadge.textContent = `${filename} (${isVideo ? 'Video' : 'Image'})`;
     }
 
     if (viewportMediaTitle) {
-      viewportMediaTitle.textContent = `${filename.toUpperCase()} — ${media.type.toUpperCase()}`;
+      viewportMediaTitle.textContent = `${filename} — ${isVideo ? 'Video' : 'Image'}`;
     }
 
     if (viewportMediaSub) {
@@ -679,21 +785,39 @@
     }
 
     if (isVideo) {
+      // VIDEO ONLY: Reset and hide image view
       if (testImageWrapper) testImageWrapper.classList.add('hidden');
+      if (testLabImage) testLabImage.removeAttribute('src');
+
+      // Show video player and load video
       if (testVideoWrapper) testVideoWrapper.classList.remove('hidden');
       if (testLabVideo) {
         testLabVideo.src = `/api/test_lab/media_file?t=${Date.now()}`;
         testLabVideo.load();
       }
+
+      // Show movement analysis section and hide muted notice
       if (movementAnalysisCard) movementAnalysisCard.classList.remove('hidden');
+      if (movementMutedNotice) movementMutedNotice.classList.add('hidden');
       if (streamVideoBtn) streamVideoBtn.classList.remove('hidden');
     } else {
+      // IMAGE ONLY: Reset and pause video player
       if (testVideoWrapper) testVideoWrapper.classList.add('hidden');
+      if (testLabVideo) {
+        testLabVideo.pause();
+        testLabVideo.removeAttribute('src');
+        testLabVideo.load();
+      }
+
+      // Show image view and set src
       if (testImageWrapper) testImageWrapper.classList.remove('hidden');
       if (testLabImage) {
         testLabImage.src = `/api/test_lab/annotated_image?t=${Date.now()}`;
       }
+
+      // Hide movement analysis section and show muted notice
       if (movementAnalysisCard) movementAnalysisCard.classList.add('hidden');
+      if (movementMutedNotice) movementMutedNotice.classList.remove('hidden');
       if (streamVideoBtn) streamVideoBtn.classList.add('hidden');
     }
 
@@ -705,7 +829,7 @@
         dets.forEach((d) => {
           const chip = document.createElement('span');
           chip.className = 'det-summary-chip';
-          chip.textContent = `${d.object.toUpperCase()} (${(d.confidence * 100).toFixed(0)}%) - ${d.position}`;
+          chip.textContent = `${d.object} (${(d.confidence * 100).toFixed(0)}%) - ${d.position}`;
           mediaDetectionsSummary.appendChild(chip);
         });
       }
@@ -847,6 +971,9 @@
   });
 
   async function sendTestLabQuery(query) {
+    // Starting a new query stops any answer still being spoken
+    fetch('/api/tts/stop', { method: 'POST' }).catch(() => {});
+
     setOrbState('ANALYZING');
     playEarcon('thinking');
 
@@ -854,7 +981,7 @@
       const res = await fetch('/api/test_lab/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: query })
+        body: JSON.stringify({ query: query, read_aloud: isReadAloudEnabled() })
       });
       const data = await res.json();
       if (data.status === 'success') {

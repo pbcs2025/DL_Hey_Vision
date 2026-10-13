@@ -100,8 +100,13 @@ def on_voice_state(state: str, data: Dict[str, Any]):
     })
 
 
-def on_voice_query(query: str):
+def on_voice_query(query: str, speak: bool = True):
     """Callback when a speech query is recognized (wake phrase, Spacebar, or direct query)."""
+    # Stop prior query utterance so answers never overlap or queue up
+    tts = get_tts_worker()
+    if tts:
+        tts.stop_query_speech()
+
     t_end_speech = time.perf_counter()
     assistant_state["last_query"] = query
     sync_broadcast({"type": "voice_query", "query": query, "timestamp": time.time()})
@@ -109,7 +114,7 @@ def on_voice_query(query: str):
     test_lab = get_test_lab_manager()
     if assistant_state.get("active_mode") == "test_lab":
         # Execute query against active Test Lab media
-        result = test_lab.execute_query(query)
+        result = test_lab.execute_query(query, speak=speak)
         time_to_answer_ms = result.get("total_elapsed_ms", 0.0)
     else:
         # Execute assistant pipeline on latest live camera frame
@@ -130,8 +135,8 @@ def on_voice_query(query: str):
         time_to_answer_ms = round((t_answer_ready - t_end_speech) * 1000.0, 1)
 
         # Speak response via TTS worker (priority 5 = high precedence over proactive speech)
-        tts = get_tts_worker()
-        tts.speak(result.get("response", ""), priority=5)
+        if speak and tts:
+            tts.speak(result.get("response", ""), priority=5)
 
     assistant_state["last_result"] = result
     assistant_state["last_response"] = result.get("response", "")
@@ -413,11 +418,12 @@ def api_trigger_space() -> JSONResponse:
 async def api_query(payload: Dict[str, Any]) -> JSONResponse:
     """Processes typed questions or quick prompt chips."""
     query = payload.get("query", "").strip()
+    read_aloud = payload.get("read_aloud", True)
     if not query:
         return JSONResponse({"error": "Empty query"}, status_code=400)
 
     # Execute query through on_voice_query handler
-    on_voice_query(query)
+    on_voice_query(query, speak=bool(read_aloud))
     return JSONResponse({
         "status": "success",
         "query": query,
@@ -425,6 +431,53 @@ async def api_query(payload: Dict[str, Any]) -> JSONResponse:
         "time_to_answer_ms": assistant_state.get("time_to_answer_ms", 0.0),
         "result": assistant_state.get("last_result", {})
     })
+
+
+@app.post("/api/tts/stop")
+def api_tts_stop() -> JSONResponse:
+    """Stops current query speech utterance and clears lower-priority speech."""
+    try:
+        tts = get_tts_worker()
+        if tts:
+            tts.stop_query_speech()
+        return JSONResponse({"status": "stopped"})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.post("/api/tts/speak")
+def api_tts_speak(payload: Dict[str, Any]) -> JSONResponse:
+    """Speaks or replays utterance through server-side TTS worker (priority 5)."""
+    text = payload.get("text", "").strip()
+    if not text:
+        return JSONResponse({"error": "Empty text"}, status_code=400)
+    try:
+        tts = get_tts_worker()
+        if not tts:
+            return JSONResponse({"status": "unavailable", "message": "TTS worker not available"}, status_code=503)
+        tts.stop_query_speech()
+        tts.speak(text, priority=5)
+        return JSONResponse({"status": "success", "text": text})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.get("/api/tts/status")
+def api_tts_status() -> JSONResponse:
+    """Checks whether server-side TTS worker is available and whether it is actively speaking."""
+    try:
+        tts = get_tts_worker()
+        return JSONResponse({
+            "status": "success",
+            "available": True,
+            "is_speaking": tts.is_speaking() if tts else False
+        })
+    except Exception as e:
+        return JSONResponse({
+            "status": "error",
+            "available": False,
+            "error": str(e)
+        }, status_code=503)
 
 
 @app.post("/api/video_source")
@@ -567,10 +620,11 @@ def api_test_lab_movement_progress() -> JSONResponse:
 def api_test_lab_query(payload: Dict[str, Any]) -> JSONResponse:
     """Executes query specifically against loaded Test Lab media."""
     query = payload.get("query", "").strip()
+    read_aloud = payload.get("read_aloud", True)
     if not query:
         return JSONResponse({"error": "Empty query"}, status_code=400)
     try:
-        result = get_test_lab_manager().execute_query(query)
+        result = get_test_lab_manager().execute_query(query, speak=bool(read_aloud))
         return JSONResponse({
             "status": "success",
             "query": query,
@@ -636,6 +690,10 @@ async def websocket_telemetry(websocket: WebSocket):
             if detection_worker:
                 _, detections, det_fps, det_lat_ms, *_ = detection_worker.get_latest_data()
 
+            tts = get_tts_worker()
+            current_status = assistant_state.get("status", "STANDBY")
+            effective_status = "SPEAKING" if (tts and tts.is_speaking()) else current_status
+
             payload = {
                 "type": "telemetry",
                 "camera_fps": cam_fps,
@@ -643,7 +701,7 @@ async def websocket_telemetry(websocket: WebSocket):
                 "detection_fps": det_fps,
                 "detection_latency_ms": det_lat_ms,
                 "detections": detections,
-                "assistant_status": assistant_state.get("status", "STANDBY"),
+                "assistant_status": effective_status,
                 "last_heard": assistant_state.get("last_heard", ""),
                 "timestamp": time.time()
             }
