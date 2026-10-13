@@ -37,7 +37,8 @@ Thumbs.db
 *.log
 
 # Local backups
-backup/
+backup/*
+!backup/**/*.json
 scratch/
 data/test/live_ui_frame.jpg
 data/test/live_query_frame.jpg

@@ -358,6 +358,7 @@
     }
   }
 
+
   function displayAssistantResponse(data) {
     if (data.timestamp && data.timestamp === lastHandledResponseTs) {
       return;

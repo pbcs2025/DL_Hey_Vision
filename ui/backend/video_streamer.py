@@ -100,6 +100,10 @@ class CameraStreamer:
                     cap = cv2.VideoCapture(idx)
 
                 if cap.isOpened():
+                    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+                    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+                    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+                    cap.set(cv2.CAP_PROP_FPS, 30)
                     ret, test_frame = cap.read()
                     if ret and test_frame is not None:
                         self.cap = cap
@@ -359,6 +363,27 @@ class AsyncDetectionWorker:
             }
             detections.append(det_dict)
 
+        annotated = self.annotate_frame(frame, detections)
+        return detections, annotated
+
+    def annotate_frame(self, frame: np.ndarray, detections: List[Dict[str, Any]]) -> np.ndarray:
+        """Fast vectorized OpenCV HUD overlay on any arbitrary frame (<0.5ms)."""
+        if not detections:
+            return frame
+
+        annotated = frame.copy()
+        for det in detections:
+            bbox = det.get("bbox")
+            if not bbox or len(bbox) != 4:
+                continue
+
+            x1, y1, x2, y2 = bbox
+            class_name = det.get("object", "")
+            conf = det.get("confidence", 0.0)
+            proximity = det.get("proximity", "Nearby")
+            w = max(1, x2 - x1)
+            h = max(1, y2 - y1)
+
             # High-Contrast WCAG AA Compliant HUD Bounding Box
             color_bgr = get_class_color(class_name)
             cv2.rectangle(annotated, (x1, y1), (x2, y2), color_bgr, 2)
@@ -366,16 +391,14 @@ class AsyncDetectionWorker:
             # HUD Corner Brackets
             corner_len = min(15, w // 4, h // 4)
             if corner_len > 4:
-                # Top-left corner
                 cv2.line(annotated, (x1, y1), (x1 + corner_len, y1), (255, 255, 255), 2)
                 cv2.line(annotated, (x1, y1), (x1, y1 + corner_len), (255, 255, 255), 2)
-                # Bottom-right corner
                 cv2.line(annotated, (x2, y2), (x2 - corner_len, y2), (255, 255, 255), 2)
                 cv2.line(annotated, (x2, y2), (x2, y2 - corner_len), (255, 255, 255), 2)
 
             # High-contrast label tag: Object + Conf% + [Proximity]
             label_text = f"{class_name.upper()} {int(conf * 100)}% [{proximity.upper()}]"
-            (text_w, text_h), baseline = cv2.getTextSize(
+            (text_w, text_h), _ = cv2.getTextSize(
                 label_text, cv2.FONT_HERSHEY_SIMPLEX, 0.45, 1
             )
             tag_y1 = max(0, y1 - text_h - 6)
@@ -397,7 +420,7 @@ class AsyncDetectionWorker:
                 cv2.LINE_AA
             )
 
-        return detections, annotated
+        return annotated
 
     def get_latest_data(self) -> Tuple[Optional[np.ndarray], List[Dict[str, Any]], float, float, int, float]:
         with self.lock:

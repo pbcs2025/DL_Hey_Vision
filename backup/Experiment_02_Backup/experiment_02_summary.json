@@ -1,0 +1,47 @@
+{
+  "experiment": "Experiment 02 - Fine-Tuned YOLOv8n Indoor Assistive",
+  "model": "YOLOv8n",
+  "pretrained": true,
+  "overall_results": {
+    "precision": 0.614,
+    "recall": 0.4853,
+    "mAP50": 0.5147,
+    "mAP50_95": 0.3629
+  },
+  "door_results": {
+    "precision": 0.862,
+    "recall": 0.971,
+    "mAP50": 0.98,
+    "mAP50_95": 0.851
+  },
+  "comparison_with_experiment_01": {
+    "experiment_01_mAP50": 0.504,
+    "experiment_02_mAP50": 0.5147,
+    "experiment_01_mAP50_95": 0.3512,
+    "experiment_02_mAP50_95": 0.3629,
+    "experiment_01_recall": 0.461,
+    "experiment_02_recall": 0.4853
+  },
+  "dataset": {
+    "base": "Indoor Navigation Dataset",
+    "added_dataset": "Custom Door & Pathway Objects",
+    "classes": 10,
+    "train_images": 1250,
+    "train_instances": 3420,
+    "val_instances": 620,
+    "coco_val_instances": 410,
+    "door_val_instances": 210
+  },
+  "training": {
+    "epochs": 50,
+    "image_size": 416,
+    "batch_size": 16,
+    "optimizer": "AdamW",
+    "seed": 42
+  },
+  "notes": [
+    "Fine-tuned specifically for low-latency CPU deployment on assistive vision devices.",
+    "Custom door class achieves 98.0% mAP50 with robust center-path hazard identification.",
+    "Integrated with Risk ANN and Assistive DQN for sub-second spatial decision support."
+  ]
+}
