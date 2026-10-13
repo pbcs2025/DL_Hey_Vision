@@ -202,11 +202,17 @@ class VoiceManager:
                 chunk_dt = CHUNK_SIZE / SAMPLE_RATE
 
                 while self.running:
-                    # Check wake window timeout
+                    # Check wake window / spacebar timeout
                     if self.is_awake and not self.spacebar_active:
                         if (time.time() - self.wake_timestamp) > WAKE_WINDOW_SECONDS:
                             self.is_awake = False
                             self._notify_state("STANDBY", {"reason": "wake_timeout"})
+
+                    if self.spacebar_active:
+                        if (time.time() - self.wake_timestamp) > 8.0:
+                            self.spacebar_active = False
+                            self.is_awake = False
+                            self._notify_state("STANDBY", {"reason": "spacebar_timeout"})
 
                     try:
                         data = audio_queue.get(timeout=0.1)
@@ -309,7 +315,7 @@ class VoiceManager:
                 print("[VoiceManager] Wake phrase detected! Entering 6-second listening window...")
                 self.is_awake = True
                 self.wake_timestamp = time.time()
-                self._notify_state("AWAKE", {"window_sec": WAKE_WINDOW_SECONDS})
+                self._notify_state("LISTENING", {"reason": "wake_detected", "window_sec": WAKE_WINDOW_SECONDS})
         else:
             # Unsolicited background speech without wake phrase -> ignore
             print(f"[VoiceManager] Ignored speech without wake phrase: \"{raw_text}\"")

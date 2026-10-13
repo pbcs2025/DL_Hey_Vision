@@ -147,6 +147,11 @@
     } catch (e) {}
     if (readAloudToggle) readAloudToggle.checked = enabled;
     if (testLabReadAloudToggle) testLabReadAloudToggle.checked = enabled;
+    fetch('/api/tts/set_read_aloud', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled: !!enabled })
+    }).catch(() => {});
   }
 
   const initialReadAloud = isReadAloudEnabled();
@@ -158,6 +163,11 @@
     testLabReadAloudToggle.checked = initialReadAloud;
     testLabReadAloudToggle.addEventListener('change', () => setReadAloudEnabled(testLabReadAloudToggle.checked));
   }
+  fetch('/api/tts/set_read_aloud', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ enabled: initialReadAloud })
+  }).catch(() => {});
 
   async function checkTtsAvailability() {
     try {
@@ -252,6 +262,11 @@
     if (!audioUnlocked) {
       unlockAudioAndStart();
       window.removeEventListener('keydown', onFirstKey);
+      if (e.code === 'Space') {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+      }
     }
   });
 
@@ -273,6 +288,9 @@
   });
 
   function triggerSpacebarAction() {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
     fetch('/api/tts/stop', { method: 'POST' }).catch(() => {});
     playEarcon('listen');
     setOrbState('LISTENING');
@@ -288,8 +306,12 @@
   // --- Status Orb State Renderer ---
   function setOrbState(state) {
     if (!statusOrb || !statusLabel) return;
-    const cleanState = (state || 'STANDBY').toUpperCase();
-    statusLabel.textContent = cleanState;
+    let cleanState = (state || 'STANDBY').toUpperCase();
+    if (cleanState === 'AWAKE') {
+      cleanState = 'LISTENING';
+    }
+    const formatted = cleanState.charAt(0) + cleanState.slice(1).toLowerCase();
+    statusLabel.textContent = formatted;
 
     statusOrb.className = 'status-orb';
     if (cleanState === 'LISTENING') {
@@ -305,8 +327,53 @@
 
   // --- Assistant Spoken & Text Responses ---
   let lastSpokenText = '';
+  let activeQuerySequence = 0;
+  let lastHandledResponseTs = 0;
+
+  function hideTtsNotes() {
+    if (ttsNoteWalk) ttsNoteWalk.classList.add('hidden');
+    if (ttsNoteTestLab) ttsNoteTestLab.classList.add('hidden');
+  }
+
+  function showTtsNotes() {
+    if (ttsNoteWalk) ttsNoteWalk.classList.remove('hidden');
+    if (ttsNoteTestLab) ttsNoteTestLab.classList.remove('hidden');
+  }
+
+  function speakWithBrowser(text) {
+    if (!text || !text.trim()) return;
+    if ('speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.05;
+        setOrbState('SPEAKING');
+        utterance.onstart = () => setOrbState('SPEAKING');
+        utterance.onend = () => setOrbState('STANDBY');
+        utterance.onerror = (e) => {
+          console.warn('Browser speech synthesis error:', e);
+          setOrbState('STANDBY');
+          showTtsNotes();
+        };
+        window.speechSynthesis.speak(utterance);
+        hideTtsNotes();
+      } catch (e) {
+        console.warn('Browser speech synthesis exception:', e);
+        setOrbState('STANDBY');
+        showTtsNotes();
+      }
+    } else {
+      setOrbState('STANDBY');
+      showTtsNotes();
+    }
+  }
 
   function displayAssistantResponse(data) {
+    if (data.timestamp && data.timestamp === lastHandledResponseTs) {
+      return;
+    }
+    if (data.timestamp) lastHandledResponseTs = data.timestamp;
+
     playEarcon('answer');
     const text = data.response || 'Ready.';
     lastSpokenText = text;
@@ -325,7 +392,12 @@
     }
 
     if (isReadAloudEnabled()) {
-      setOrbState('SPEAKING');
+      if (data.tts_spoken) {
+        setOrbState('SPEAKING');
+        hideTtsNotes();
+      } else {
+        speakWithBrowser(text);
+      }
     } else {
       setOrbState('STANDBY');
     }
@@ -342,8 +414,7 @@
       });
       const data = await res.json();
       if (data && data.status === 'success') {
-        if (ttsNoteWalk) ttsNoteWalk.classList.add('hidden');
-        if (ttsNoteTestLab) ttsNoteTestLab.classList.add('hidden');
+        hideTtsNotes();
         return;
       }
     } catch (err) {
@@ -351,17 +422,7 @@
     }
 
     // Fallback to Web Speech API
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(lastSpokenText);
-      utterance.rate = 1.05;
-      utterance.onend = () => setOrbState('STANDBY');
-      window.speechSynthesis.speak(utterance);
-    } else {
-      if (ttsNoteWalk) ttsNoteWalk.classList.remove('hidden');
-      if (ttsNoteTestLab) ttsNoteTestLab.classList.remove('hidden');
-      setOrbState('STANDBY');
-    }
+    speakWithBrowser(lastSpokenText);
   }
 
   if (replayBtn) replayBtn.addEventListener('click', replayLastSpeech);
@@ -387,8 +448,10 @@
   });
 
   async function sendQuery(query) {
-    // Starting a new query stops any answer still being spoken
-    fetch('/api/tts/stop', { method: 'POST' }).catch(() => {});
+    const querySeq = ++activeQuerySequence;
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
 
     setOrbState('ANALYZING');
     playEarcon('thinking');
@@ -401,10 +464,15 @@
         body: JSON.stringify({ query: query, read_aloud: isReadAloudEnabled() })
       });
       const data = await res.json();
+      if (querySeq !== activeQuerySequence) {
+        // Discard superseded query response to prevent overlapping speech
+        return;
+      }
       if (data.status === 'success') {
         displayAssistantResponse(data);
       }
     } catch (err) {
+      if (querySeq !== activeQuerySequence) return;
       console.warn('Query failed:', err);
       setOrbState('STANDBY');
     }
@@ -469,7 +537,7 @@
       if (msg.data && msg.data.text) {
         heardText.textContent = `Heard: "${msg.data.text}"`;
       }
-      if (msg.state === 'AWAKE') {
+      if (msg.state === 'AWAKE' || msg.data?.reason === 'wake_detected') {
         playEarcon('wake');
         heardText.textContent = 'Wake detected! Listening for question...';
       } else if (msg.state === 'LISTENING') {
@@ -971,8 +1039,10 @@
   });
 
   async function sendTestLabQuery(query) {
-    // Starting a new query stops any answer still being spoken
-    fetch('/api/tts/stop', { method: 'POST' }).catch(() => {});
+    const querySeq = ++activeQuerySequence;
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
 
     setOrbState('ANALYZING');
     playEarcon('thinking');
@@ -984,11 +1054,13 @@
         body: JSON.stringify({ query: query, read_aloud: isReadAloudEnabled() })
       });
       const data = await res.json();
+      if (querySeq !== activeQuerySequence) return;
       if (data.status === 'success') {
         displayAssistantResponse(data);
         renderPipelineTrace(data.stage_latencies || {}, data.time_to_answer_ms || 0);
       }
     } catch (err) {
+      if (querySeq !== activeQuerySequence) return;
       console.warn('Test Lab query failed:', err);
       setOrbState('STANDBY');
     }

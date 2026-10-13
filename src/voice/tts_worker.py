@@ -1,6 +1,7 @@
 """
 Persistent, thread-safe, priority-based Text-to-Speech (TTS) worker.
-Uses Windows SAPI5 via pyttsx3 on a dedicated worker thread with interruptible priority queue.
+Uses Windows SAPI5 (via native COM / pyttsx3 fallback) on a dedicated worker thread
+with interruptible priority queue, safe purge/interruption, and reliable mic-mute tracking.
 """
 
 import queue
@@ -9,22 +10,33 @@ import time
 from typing import Optional, Callable
 import pyttsx3
 
+try:
+    import pythoncom
+    import win32com.client
+    HAS_WIN32COM = True
+except Exception:
+    HAS_WIN32COM = False
+
 
 class TTSWorker:
     """
-    Dedicated background worker thread for pyttsx3.
+    Dedicated background worker thread for TTS.
     Supports priority queuing (1 = urgent warning, 5 = user query response, 10 = proactive alert),
     instant interruption for safety warnings, and mic-mute status tracking.
     """
 
     def __init__(self, rate: int = 170, volume: float = 1.0):
         self.rate = rate
-        self.volume = volume
+        self.volume = max(0.0, min(1.0, float(volume)))
         self._queue = queue.PriorityQueue()
         self._is_speaking = False
+        self._current_priority = 999
         self._stop_event = threading.Event()
         self._engine_lock = threading.Lock()
         self._current_engine = None
+        self._use_sapi = HAS_WIN32COM
+        self._available = False
+
         self._worker_thread = threading.Thread(
             target=self._run_loop,
             name="TTSWorkerThread",
@@ -32,29 +44,102 @@ class TTSWorker:
         )
         self._worker_thread.start()
 
+        # Wait briefly for worker initialization
+        for _ in range(20):
+            if self._available or not self._worker_thread.is_alive():
+                break
+            time.sleep(0.05)
+
+    def _init_engine(self):
+        """Initializes or re-initializes speech synthesis engine inside worker thread."""
+        if self._use_sapi:
+            try:
+                pythoncom.CoInitialize()
+                voice = win32com.client.Dispatch("SAPI.SpVoice")
+                voice.Volume = int(self.volume * 100)
+                voice.Rate = 0  # Natural speed in SAPI scale (-10 to 10)
+                self._available = True
+                return voice
+            except Exception as e:
+                print(f"[TTSWorker] Native SAPI initialization error: {e}. Falling back to pyttsx3.")
+                self._use_sapi = False
+
+        # Fallback to pyttsx3
+        try:
+            engine = pyttsx3.init()
+            engine.setProperty("rate", self.rate)
+            engine.setProperty("volume", self.volume)
+            self._available = True
+            return engine
+        except Exception as e:
+            print(f"[TTSWorker] pyttsx3 initialization error: {e}")
+            self._available = False
+            return None
+
     def _run_loop(self):
-        engine = pyttsx3.init()
-        engine.setProperty("rate", self.rate)
-        engine.setProperty("volume", self.volume)
+        engine = self._init_engine()
         with self._engine_lock:
             self._current_engine = engine
 
         while not self._stop_event.is_set():
             try:
-                item = self._queue.get(timeout=0.2)
+                item = self._queue.get(timeout=0.1)
             except queue.Empty:
                 continue
 
             priority, _, text, on_done = item
 
-            self._is_speaking = True
+            if not text or not str(text).strip():
+                self._queue.task_done()
+                if on_done and callable(on_done):
+                    try:
+                        on_done()
+                    except Exception:
+                        pass
+                continue
+
+            with self._engine_lock:
+                self._current_priority = priority
+                self._is_speaking = True
+
             try:
-                engine.say(text)
-                engine.runAndWait()
+                if self._use_sapi and engine is not None and hasattr(engine, "Speak"):
+                    engine.Speak(str(text), 1)  # 1 = SVSFlagsAsync
+                    while not self._stop_event.is_set():
+                        # WaitUntilDone(40) blocks up to 40ms; returns True if done or purged
+                        if engine.WaitUntilDone(40):
+                            break
+                elif engine is not None:
+                    # pyttsx3 fallback
+                    engine.say(str(text))
+                    engine.runAndWait()
+                else:
+                    # Engine unavailable, recreate
+                    engine = self._init_engine()
+                    with self._engine_lock:
+                        self._current_engine = engine
+                    if engine:
+                        if self._use_sapi:
+                            engine.Speak(str(text), 1)
+                            while not self._stop_event.is_set():
+                                if engine.WaitUntilDone(40):
+                                    break
+                        else:
+                            engine.say(str(text))
+                            engine.runAndWait()
             except Exception as e:
                 print(f"[TTSWorker] Speech synthesis error: {e}")
+                # Safe engine recovery
+                try:
+                    engine = self._init_engine()
+                    with self._engine_lock:
+                        self._current_engine = engine
+                except Exception as ex:
+                    print(f"[TTSWorker] Engine recovery failed: {ex}")
             finally:
-                self._is_speaking = False
+                with self._engine_lock:
+                    self._is_speaking = False
+                    self._current_priority = 999
                 self._queue.task_done()
                 if on_done and callable(on_done):
                     try:
@@ -67,17 +152,21 @@ class TTSWorker:
         text: str,
         priority: int = 10,
         on_done: Optional[Callable[[], None]] = None
-    ):
+    ) -> bool:
         """
         Enqueue text to be spoken.
         :param text: Text string to speak.
-        :param priority: Lower integer means higher priority (10 = standard query answer).
+        :param priority: Lower integer means higher priority (1 = WARN, 5 = user query, 10 = proactive).
         :param on_done: Optional callback executed when utterance completes.
+        :return: True if speech was queued, False if empty or unavailable.
         """
         if not text or not str(text).strip():
-            return
+            return False
+        if not self.is_available():
+            return False
         # time.time() serves as FIFO tie-breaker for identical priority
         self._queue.put((priority, time.time(), str(text).strip(), on_done))
+        return True
 
     def interrupt_and_warn(
         self,
@@ -106,11 +195,16 @@ class TTSWorker:
 
         # Signal engine to stop current utterance immediately
         with self._engine_lock:
-            if self._current_engine and self._is_speaking:
+            if self._current_engine is not None and self._is_speaking:
                 try:
-                    self._current_engine.stop()
+                    if hasattr(self._current_engine, "Speak"):
+                        self._current_engine.Speak("", 3)  # 3 = SVSFPurgeBeforeSpeak
+                    elif hasattr(self._current_engine, "stop"):
+                        self._current_engine.stop()
                 except Exception as e:
-                    print(f"[TTSWorker] Exception on engine.stop(): {e}")
+                    print(f"[TTSWorker] Exception on engine purge: {e}")
+            self._is_speaking = False
+            self._current_priority = 999
 
         # Enqueue high-priority warning
         self._queue.put((1, time.time(), str(warning_text).strip(), on_done))
@@ -134,25 +228,47 @@ class TTSWorker:
             self._queue.put(item)
 
         with self._engine_lock:
-            if self._current_engine and self._is_speaking:
-                try:
-                    self._current_engine.stop()
-                except Exception as e:
-                    print(f"[TTSWorker] Exception on stop_query_speech: {e}")
+            if self._is_speaking and self._current_priority >= 2:
+                if self._current_engine is not None:
+                    try:
+                        if hasattr(self._current_engine, "Speak"):
+                            self._current_engine.Speak("", 3)  # 3 = SVSFPurgeBeforeSpeak
+                        elif hasattr(self._current_engine, "stop"):
+                            self._current_engine.stop()
+                    except Exception as e:
+                        print(f"[TTSWorker] Exception on stop_query_speech: {e}")
+                self._is_speaking = False
+                self._current_priority = 999
 
     def is_speaking(self) -> bool:
         """Returns True if the assistant is actively outputting voice."""
-        return self._is_speaking
+        with self._engine_lock:
+            if not self._is_speaking:
+                return False
+            if self._use_sapi and self._current_engine is not None and hasattr(self._current_engine, "Status"):
+                try:
+                    return self._current_engine.Status.RunningState == 2
+                except Exception:
+                    pass
+            return self._is_speaking
+
+    def is_available(self) -> bool:
+        """Returns True if the TTS subsystem is operational."""
+        return self._available and self._worker_thread.is_alive()
 
     def stop(self):
         """Gracefully terminate worker thread and stop current speech."""
         self._stop_event.set()
         with self._engine_lock:
-            if self._current_engine:
+            if self._current_engine is not None:
                 try:
-                    self._current_engine.stop()
+                    if hasattr(self._current_engine, "Speak"):
+                        self._current_engine.Speak("", 3)
+                    elif hasattr(self._current_engine, "stop"):
+                        self._current_engine.stop()
                 except Exception:
                     pass
+            self._is_speaking = False
 
 
 # Singleton instance accessor

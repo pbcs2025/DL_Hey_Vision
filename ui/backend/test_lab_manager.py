@@ -16,7 +16,7 @@ import time
 import json
 import shutil
 import threading
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional, Tuple, Callable
 import cv2
 import numpy as np
 
@@ -305,7 +305,7 @@ class TestLabManager:
                 self.analysis_job["elapsed_sec"] = round(time.time() - self.analysis_job["start_time"], 1)
             return dict(self.analysis_job)
 
-    def execute_query(self, query: str, speak: bool = True) -> Dict[str, Any]:
+    def execute_query(self, query: str, speak: bool = True, on_done: Optional[Callable[[], None]] = None) -> Tuple[Dict[str, Any], bool]:
         """
         Executes assistant query on the currently loaded Test Lab media.
         Supports voice, typed queries, and chips.
@@ -342,11 +342,17 @@ class TestLabManager:
 
         # Speak answer using priority 5 (user response)
         response_text = result.get("response", "")
-        if response_text and speak and self.tts_worker:
-            self.tts_worker.speak(response_text, priority=5)
+        tts_spoken = False
+        if response_text and speak and self.tts_worker and self.tts_worker.is_available():
+            tts_spoken = bool(self.tts_worker.speak(response_text, priority=5, on_done=on_done))
+        elif on_done and callable(on_done):
+            try:
+                on_done()
+            except Exception:
+                pass
 
         result["total_elapsed_ms"] = total_time_ms
-        return result
+        return result, tts_spoken
 
     def get_evaluation_summary(self) -> Dict[str, Any]:
         """
