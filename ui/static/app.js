@@ -234,7 +234,7 @@
   if (tabTestLab) tabTestLab.addEventListener('click', () => setMode('test-lab'));
   if (tabEval) tabEval.addEventListener('click', () => setMode('eval'));
 
-  // --- Audio Unlock & Greeting ---
+  // --- Audio Unlock ---
   function unlockAudioAndStart() {
     initAudioContext();
     if (startOverlay) {
@@ -242,16 +242,6 @@
       setTimeout(() => startOverlay.remove(), 400);
     }
     playEarcon('wake');
-
-    // Spoken startup greeting
-    if ('speechSynthesis' in window) {
-      const greetingUtterance = new SpeechSynthesisUtterance(
-        'AI Vision Assistant initialized. Walk mode active. Say Hey Vision or press Spacebar to ask a question.'
-      );
-      greetingUtterance.rate = 1.05;
-      greetingUtterance.pitch = 1.0;
-      window.speechSynthesis.speak(greetingUtterance);
-    }
   }
 
   if (startBtn) {

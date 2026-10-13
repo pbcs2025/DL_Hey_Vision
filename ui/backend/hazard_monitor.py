@@ -227,22 +227,13 @@ class ProactiveHazardMonitor:
 
             if is_chosen:
                 effective_action = c["raw_action"]
-                if effective_action == "WARN":
-                    # Priority 1 = urgent warning (interrupts everything)
-                    self.tts_worker.interrupt_and_warn(c["phrase"])
-                    self.last_alert_times[key] = now
-                    self.last_alert_times[c["object"]] = now
-                    self.last_global_alert_time = now
-                    self.total_alerts_count += 1
-                    spoke_alert = True
-                elif effective_action == "SPEAK":
-                    # Priority 10 = proactive speech (waits behind user query answers which use priority 5)
-                    self.tts_worker.speak(c["phrase"], priority=10)
-                    self.last_alert_times[key] = now
-                    self.last_alert_times[c["object"]] = now
-                    self.last_global_alert_time = now
-                    self.total_alerts_count += 1
-                    spoke_alert = True
+                # Record alert timing and count for HUD trace log; proactive voice speech is disabled
+                # so the assistant only speaks answers aloud when a question is asked.
+                self.last_alert_times[key] = now
+                self.last_alert_times[c["object"]] = now
+                self.last_global_alert_time = now
+                self.total_alerts_count += 1
+                spoke_alert = True
 
             log_entry = {
                 "timestamp": now,
