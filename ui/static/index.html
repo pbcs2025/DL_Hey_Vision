@@ -6,9 +6,14 @@
   <title>AI Vision Assistant — Assistive Spatial Navigation & Test Lab</title>
   <meta name="description" content="Assistive vision system for blind users with continuous object detection, natural voice interaction, proactive hazard monitoring, Test Lab, and model evaluation.">
   <meta name="theme-color" content="#00f0ff">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="manifest" href="/static/manifest.json">
+  <meta name="apple-mobile-web-app-title" content="Vision Assistant">
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/icon-192.png">
+  <link rel="apple-touch-icon" href="/static/icon-192.png">
+  <link rel="manifest" href="/manifest.json">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body class="vision-theme">
@@ -609,5 +614,14 @@
   </div>
 
   <script src="/static/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch((err) => {
+          console.warn('Service Worker registration skipped:', err);
+        });
+      });
+    }
+  </script>
 </body>
 </html>

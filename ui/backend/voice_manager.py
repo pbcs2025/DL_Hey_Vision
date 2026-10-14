@@ -41,7 +41,12 @@ WAKE_PATTERNS = [
     r"\bhigh\s+vision\b",
     r"\bhey\s+vison\b",
     r"\bhey\s+division\b",
-    r"\bhey\s+visual\b"
+    r"\bhey\s+visual\b",
+    r"\bwelcome\s+vision\b",
+    r"\bhello\s+vision\b",
+    r"\ba\s+vision\b",
+    r"\bay\s+vision\b",
+    r"\bokay?\s+vision\b"
 ]
 
 

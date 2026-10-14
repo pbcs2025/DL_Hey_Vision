@@ -181,6 +181,22 @@ async def lifespan(app: FastAPI):
     global camera_streamer, detection_worker, voice_manager, hazard_monitor
     print("\n[AI Vision Server] Starting up...")
 
+    # Suppress spurious Windows Proactor connection-reset errors (WinError 10054)
+    # when remote clients (e.g. phone or browser tabs) close or reload connections.
+    try:
+        loop = asyncio.get_running_loop()
+        def _proactor_exception_handler(loop, context):
+            exc = context.get("exception")
+            if isinstance(exc, (ConnectionResetError, ConnectionAbortedError)):
+                return
+            msg = context.get("message", "")
+            if "_call_connection_lost" in msg or "10054" in str(context):
+                return
+            loop.default_exception_handler(context)
+        loop.set_exception_handler(_proactor_exception_handler)
+    except Exception:
+        pass
+
     # Initialize and start camera streamer
     camera_streamer = CameraStreamer(preferred_index=0)
     camera_streamer.start()
@@ -263,6 +279,20 @@ def get_index():
     return FileResponse(index_path)
 
 
+@app.get("/manifest.json")
+def get_manifest():
+    """Serves PWA Web App Manifest."""
+    manifest_path = os.path.join(PROJECT_ROOT, "ui", "static", "manifest.json")
+    return FileResponse(manifest_path, media_type="application/manifest+json")
+
+
+@app.get("/sw.js")
+def get_service_worker():
+    """Serves PWA Service Worker with root scope."""
+    sw_path = os.path.join(PROJECT_ROOT, "ui", "static", "sw.js")
+    return FileResponse(sw_path, media_type="application/javascript")
+
+
 # -------------------------------------------------------------
 # Video Streaming Endpoint (MJPEG)
 # -------------------------------------------------------------
@@ -276,32 +306,35 @@ def generate_mjpeg_stream():
     global camera_streamer, detection_worker
     target_frame_interval = 0.040  # ~25 FPS max streaming interval
 
-    while True:
-        t_start = time.perf_counter()
+    try:
+        while True:
+            t_start = time.perf_counter()
 
-        raw_frame = None
-        if camera_streamer:
-            raw_frame = camera_streamer.get_raw_frame()
+            raw_frame = None
+            if camera_streamer:
+                raw_frame = camera_streamer.get_raw_frame()
 
-        if raw_frame is not None:
-            if detection_worker:
-                _, detections, *_ = detection_worker.get_latest_data()
-                if detections:
-                    raw_frame = detection_worker.annotate_frame(raw_frame, detections)
+            if raw_frame is not None:
+                if detection_worker:
+                    _, detections, *_ = detection_worker.get_latest_data()
+                    if detections:
+                        raw_frame = detection_worker.annotate_frame(raw_frame, detections)
 
-            # Fast JPEG encode (quality 70 = crisp HUD text, 50% smaller payload, no buffer lag)
-            ret, buffer = cv2.imencode(".jpg", raw_frame, [cv2.IMWRITE_JPEG_QUALITY, 70])
-            if ret:
-                frame_bytes = buffer.tobytes()
-                yield (
-                    b"--frame\r\n"
-                    b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n"
-                )
+                # Fast JPEG encode (quality 70 = crisp HUD text, 50% smaller payload, no buffer lag)
+                ret, buffer = cv2.imencode(".jpg", raw_frame, [cv2.IMWRITE_JPEG_QUALITY, 70])
+                if ret:
+                    frame_bytes = buffer.tobytes()
+                    yield (
+                        b"--frame\r\n"
+                        b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n"
+                    )
 
-        # Regulate stream rate
-        elapsed = time.perf_counter() - t_start
-        sleep_time = max(0.005, target_frame_interval - elapsed)
-        time.sleep(sleep_time)
+            # Regulate stream rate
+            elapsed = time.perf_counter() - t_start
+            sleep_time = max(0.005, target_frame_interval - elapsed)
+            time.sleep(sleep_time)
+    except (GeneratorExit, ConnectionResetError, BrokenPipeError, asyncio.CancelledError):
+        return
 
 
 @app.get("/video_feed")
@@ -778,10 +811,11 @@ async def websocket_telemetry(websocket: WebSocket):
 
             await websocket.send_text(json.dumps(payload))
             await asyncio.sleep(0.1)  # 10 Hz telemetry broadcast
-    except WebSocketDisconnect:
+    except (WebSocketDisconnect, ConnectionResetError, ConnectionAbortedError):
         pass
     except Exception as e:
-        print(f"[WebSocket] Disconnected: {e}")
+        if "10054" not in str(e):
+            print(f"[WebSocket] Disconnected: {e}")
     finally:
         receive_task.cancel()
         async with websocket_lock:
